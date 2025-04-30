@@ -73,10 +73,10 @@ sampler = sampler(net)
 #sampler.model.cuda(1)
 batch_size = 1
 
-pred_text = np.load('data/predicted_features/subj{:02d}/nsd_cliptext_predtest_nsdgeneral.npy'.format(sub))
+pred_text = np.load('/scratch/jlb638/brain-diffuser/data/predicted_features/subj{:02d}/nsd_cliptext_predtest_nsdgeneral.npy'.format(sub))
 pred_text = torch.tensor(pred_text).half().cuda(1)
 
-pred_vision = np.load('data/predicted_features/subj{:02d}/nsd_clipvision_predtest_nsdgeneral.npy'.format(sub))
+pred_vision = np.load('/scratch/jlb638/brain-diffuser/data/predicted_features/subj{:02d}/nsd_clipvision_predtest_nsdgeneral.npy'.format(sub))
 pred_vision = torch.tensor(pred_vision).half().cuda(1)
 
 

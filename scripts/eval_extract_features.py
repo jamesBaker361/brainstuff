@@ -19,6 +19,7 @@ from skimage import data, img_as_float
 from skimage.transform import resize as imresize
 from skimage.metrics import structural_similarity as ssim
 import scipy as sp
+import os
 
 import argparse
 parser = argparse.ArgumentParser(description='Argument Parser')
@@ -28,11 +29,11 @@ sub=int(args.sub)
 assert sub in [0,1,2,5,7]
 
 
-images_dir = 'data/nsddata_stimuli/test_images'
-feats_dir = 'data/eval_features/test_images'
+images_dir = os.environ["BRAIN_DATA_DIR"]+'/nsddata_stimuli/test_images'
+feats_dir = os.environ["BRAIN_DATA_DIR"]+'/eval_features/test_images'
 
 if sub in [1,2,5,7]:
-    feats_dir = 'data/eval_features/subj{:02d}'.format(sub)
+    feats_dir = os.environ["BRAIN_DATA_DIR"]+'/eval_features/subj{:02d}'.format(sub)
     images_dir = 'results/versatile_diffusion/subj{:02d}'.format(sub)
 
 if not os.path.exists(feats_dir):

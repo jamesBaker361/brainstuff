@@ -7,14 +7,15 @@ parser.add_argument("-sub", "--sub",help="Subject Number",default=1)
 args = parser.parse_args()
 sub=int(args.sub)
 assert sub in [1,2,5,7]
+import os
 
-nsd_features = np.load('data/extracted_features/subj{:02d}/nsd_vdvae_features_31l.npz'.format(sub))
+nsd_features = np.load(os.environ["BRAIN_DATA_DIR"]+'/extracted_features/subj{:02d}/nsd_vdvae_features_31l.npz'.format(sub))
 train_latents = nsd_features['train_latents']
 test_latents = nsd_features['test_latents']
 
-train_path = 'data/processed_data/subj{:02d}/nsd_train_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub)
+train_path = os.environ["BRAIN_DATA_DIR"]+'/processed_/scratch/jlb638/brain-diffuser/data/subj{:02d}/nsd_train_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub)
 train_fmri = np.load(train_path)
-test_path = 'data/processed_data/subj{:02d}/nsd_test_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub)
+test_path = os.environ["BRAIN_DATA_DIR"]+'/processed_/scratch/jlb638/brain-diffuser/data/subj{:02d}/nsd_test_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub)
 test_fmri = np.load(test_path)
 
 ## Preprocessing fMRI
@@ -46,7 +47,7 @@ std_norm_test_latent = (pred_test_latent - np.mean(pred_test_latent,axis=0)) / n
 pred_latents = std_norm_test_latent * np.std(train_latents,axis=0) + np.mean(train_latents,axis=0)
 print(reg.score(test_fmri,test_latents))
 
-np.save('data/predicted_features/subj{:02d}/nsd_vdvae_nsdgeneral_pred_sub{}_31l_alpha50k.npy'.format(sub,sub),pred_latents)
+np.save(os.environ["BRAIN_DATA_DIR"]+'/predicted_features/subj{:02d}/nsd_vdvae_nsdgeneral_pred_sub{}_31l_alpha50k.npy'.format(sub,sub),pred_latents)
 
 
 datadict = {
@@ -55,5 +56,5 @@ datadict = {
 
 }
 
-with open('data/regression_weights/subj{:02d}/vdvae_regression_weights.pkl'.format(sub),"wb") as f:
+with open(os.environ["BRAIN_DATA_DIR"]+'/regression_weights/subj{:02d}/vdvae_regression_weights.pkl'.format(sub),"wb") as f:
   pickle.dump(datadict,f)

@@ -27,6 +27,7 @@ from torch.utils.data import DataLoader, Dataset
 from PIL import Image
 import torchvision.transforms as T
 import pickle
+import os
 
 import argparse
 parser = argparse.ArgumentParser(description='Argument Parser')
@@ -73,7 +74,7 @@ class batch_generator_external_images(Dataset):
 
 
 
-image_path = 'data/processed_data/subj{:02d}/nsd_test_stim_sub{}.npy'.format(sub,sub)
+image_path = os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_stim_sub{}.npy'.format(sub,sub)
 test_images = batch_generator_external_images(data_path = image_path)
 testloader = DataLoader(test_images,batch_size,shuffle=False)
 
@@ -94,7 +95,7 @@ for i,x in enumerate(testloader):
         #imshow(imgrid(test_images[i*batch_size : (i+1)*batch_size], cols=batch_size,pad=20))
 test_latents = np.concatenate(test_latents)      
 
-pred_latents = np.load('data/predicted_features/subj{:02d}/nsd_vdvae_nsdgeneral_pred_sub{}_31l_alpha50k.npy'.format(sub,sub))
+pred_latents = np.load(os.environ["BRAIN_DATA_DIR"]+'/predicted_features/subj{:02d}/nsd_vdvae_nsdgeneral_pred_sub{}_31l_alpha50k.npy'.format(sub,sub))
 ref_latent = stats
 
 # Transfor latents from flattened representation to hierarchical

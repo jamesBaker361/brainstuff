@@ -6,6 +6,7 @@ import scipy.io as spio
 import nibabel as nib
 import scipy as sp
 from PIL import Image
+import os
 
 
 
@@ -47,8 +48,8 @@ net_list = [
     ('swav','avgpool')
     ]
 
-feats_dir = 'data/eval_features/subj{:02d}'.format(sub)
-test_dir = 'data/eval_features/test_images'
+feats_dir = os.environ["BRAIN_DATA_DIR"]+'/eval_features/subj{:02d}'.format(sub)
+test_dir = os.environ["BRAIN_DATA_DIR"]+'/eval_features/test_images'
 num_test = 982
 distance_fn = sp.spatial.distance.correlation
 pairwise_corrs = []
@@ -76,7 +77,7 @@ ssim_list = []
 pixcorr_list = []
 for i in range(982):
     gen_image = Image.open('results/versatile_diffusion/subj{:02d}/{}.png'.format(sub,i)).resize((425,425))
-    gt_image = Image.open('data/nsddata_stimuli/test_images/{}.png'.format(i))
+    gt_image = Image.open(os.environ["BRAIN_DATA_DIR"]+'/nsddata_stimuli/test_images/{}.png'.format(i))
     gen_image = np.array(gen_image)/255.0
     gt_image = np.array(gt_image)/255.0
     pixcorr_res = np.corrcoef(gt_image.reshape(1,-1), gen_image.reshape(1,-1))[0,1]

@@ -53,10 +53,10 @@ class batch_generator_external_images(Dataset):
         return  len(self.im)
     
 batch_size=1
-image_path = 'data/processed_data/subj{:02d}/nsd_train_stim_sub{}.npy'.format(sub,sub)
+image_path = os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_stim_sub{}.npy'.format(sub,sub)
 train_images = batch_generator_external_images(data_path = image_path)
 
-image_path = 'data/processed_data/subj{:02d}/nsd_test_stim_sub{}.npy'.format(sub,sub)
+image_path = os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_stim_sub{}.npy'.format(sub,sub)
 test_images = batch_generator_external_images(data_path = image_path)
 
 trainloader = DataLoader(train_images,batch_size,shuffle=False)
@@ -74,14 +74,14 @@ with torch.no_grad():
         c = net.clip_encode_vision(cin)
         test_clip[i] = c[0].cpu().numpy()
     
-    np.save('data/extracted_features/subj{:02d}/nsd_clipvision_test.npy'.format(sub),test_clip)
+    np.save(os.environ["BRAIN_DATA_DIR"]+'/extracted_features/subj{:02d}/nsd_clipvision_test.npy'.format(sub),test_clip)
         
     for i,cin in enumerate(trainloader):
         print(i)
         #ctemp = cin*2 - 1
         c = net.clip_encode_vision(cin)
         train_clip[i] = c[0].cpu().numpy()
-    np.save('data/extracted_features/subj{:02d}/nsd_clipvision_train.npy'.format(sub),train_clip)
+    np.save(os.environ["BRAIN_DATA_DIR"]+'/extracted_features/subj{:02d}/nsd_clipvision_train.npy'.format(sub),train_clip)
 
 
 
