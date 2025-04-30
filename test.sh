@@ -1,0 +1,15 @@
+ sbatch --err=slurm/script_test/cliptext_extract_features.err --out=slurm/script_test/cliptext_extract_features.out runpymain.sh cliptext_extract_features.py
+ sbatch --err=slurm/script_test/cliptext_regression.err --out=slurm/script_test/cliptext_regression.out runpymain.sh cliptext_regression.py
+ sbatch --err=slurm/script_test/clipvision_extract_features.err --out=slurm/script_test/clipvision_extract_features.out runpymain.sh clipvision_extract_features.py
+ sbatch --err=slurm/script_test/clipvision_regression.err --out=slurm/script_test/clipvision_regression.out runpymain.sh clipvision_regression.py
+ sbatch --err=slurm/script_test/evaluate_reconstruction.err --out=slurm/script_test/evaluate_reconstruction.out runpymain.sh evaluate_reconstruction.py
+ sbatch --err=slurm/script_test/eval_extract_features.err --out=slurm/script_test/eval_extract_features.out runpymain.sh eval_extract_features.py
+ sbatch --err=slurm/script_test/roi_extract.err --out=slurm/script_test/roi_extract.out runpymain.sh roi_extract.py
+ sbatch --err=slurm/script_test/roi_generate_features.err --out=slurm/script_test/roi_generate_features.out runpymain.sh roi_generate_features.py
+ sbatch --err=slurm/script_test/roi_vdvae_reconstruct.err --out=slurm/script_test/roi_vdvae_reconstruct.out runpymain.sh roi_vdvae_reconstruct.py
+ sbatch --err=slurm/script_test/roi_versatilediffusion_reconstruct.err --out=slurm/script_test/roi_versatilediffusion_reconstruct.out runpymain.sh roi_versatilediffusion_reconstruct.py
+ sbatch --err=slurm/script_test/save_test_images.err --out=slurm/script_test/save_test_images.out runpymain.sh save_test_images.py
+ sbatch --err=slurm/script_test/vdvae_extract_features.err --out=slurm/script_test/vdvae_extract_features.out runpymain.sh vdvae_extract_features.py
+ sbatch --err=slurm/script_test/vdvae_reconstruct_images.err --out=slurm/script_test/vdvae_reconstruct_images.out runpymain.sh vdvae_reconstruct_images.py
+ sbatch --err=slurm/script_test/vdvae_regression.err --out=slurm/script_test/vdvae_regression.out runpymain.sh vdvae_regression.py
+ sbatch --err=slurm/script_test/versatilediffusion_reconstruct_images.err --out=slurm/script_test/versatilediffusion_reconstruct_images.out runpymain.sh versatilediffusion_reconstruct_images.py
