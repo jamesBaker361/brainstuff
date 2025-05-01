@@ -16,9 +16,9 @@
 
 #SBATCH --time=3-00:00:00           # Total run time limit (D-HH:MM:SS)
 
-#SBATCH --output=slurm/out/%j.out  # STDOUT output file
+#SBATCH --output=slurm_chip/out/%j.out  # STDOUT output file
 
-#SBATCH --error=slurm/err/%j.err   # STDERR output file (optional)
+#SBATCH --error=slurm_chip/err/%j.err   # STDERR output file (optional)
 
 day=$(date +'%m/%d/%Y %R')
 echo "gpu"  ${day} $SLURM_JOBID "node_list" $SLURM_NODELIST $@  "\n" >> jobs.txt
