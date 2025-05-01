@@ -30,13 +30,15 @@ norm_scale_train = np.std(train_fmri, axis=0, ddof=1)
 train_fmri = (train_fmri - norm_mean_train) / norm_scale_train
 test_fmri = (test_fmri - norm_mean_train) / norm_scale_train
 
-print(np.mean(train_fmri),np.std(train_fmri))
-print(np.mean(test_fmri),np.std(test_fmri))
+print('np.mean(train_fmri),np.std(train_fmri)',np.mean(train_fmri),np.std(train_fmri))
+print('np.mean(test_fmri),np.std(test_fmri)',np.mean(test_fmri),np.std(test_fmri))
 
-print(np.max(train_fmri),np.min(train_fmri))
-print(np.max(test_fmri),np.min(test_fmri))
+print('np.max(train_fmri),np.min(train_fmri)',np.max(train_fmri),np.min(train_fmri))
+print('np.max(test_fmri),np.min(test_fmri)',np.max(test_fmri),np.min(test_fmri))
 
 num_voxels, num_train, num_test = train_fmri.shape[1], len(train_fmri), len(test_fmri)
+
+print("train_fmri.shape,num_train, num_test",train_fmri.shape,num_train, num_test)
 
 ## latents Features Regression
 print('Training latents Feature Regression')
