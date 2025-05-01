@@ -1,4 +1,4 @@
-from email.policy import strict
+
 import torch
 import torchvision.models
 import os.path as osp
