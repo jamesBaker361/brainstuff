@@ -94,7 +94,7 @@ class get_model(object):
             if verbose:
                 print_log('Load ckpt from {}'.format(cfg.ckpt))
         elif 'pth' in cfg:
-            sd = torch.load(cfg.pth, map_location=map_location)
+            sd = torch.load(cfg.pth, map_location=map_location,weights_only=False)
             net.load_state_dict(sd, strict=strict_sd)
             if verbose:
                 print_log('Load pth from {}'.format(cfg.pth))
