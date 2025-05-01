@@ -33,5 +33,6 @@ export HPS_ROOT="/scratch/jlb638/hps-cache"
 export IMAGE_REWARD_PATH="/scratch/jlb638/reward-blob"
 export IMAGE_REWARD_CONFIG="/scratch/jlb638/ImageReward/med_config.json"
 export BRAIN_DATA_DIR='/scratch/jlb638/brain-diffuser/data'
+export SCIKIT_LEARN_DATA="/scratch/jlb638/scikit-learn-data"
 srun python3 $@
 conda deactivate
