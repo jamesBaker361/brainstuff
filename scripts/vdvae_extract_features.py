@@ -110,5 +110,5 @@ for i,x in enumerate(trainloader):
         train_latents.append(np.hstack(batch_latent))
 train_latents = np.concatenate(train_latents)      
 
-np.savez("data/extracted_features/subj{:02d}/nsd_vdvae_features_31l.npz".format(sub),train_latents=train_latents,test_latents=test_latents)
+np.savez(os.environ["BRAIN_DATA_DIR"]+"/extracted_features/subj{:02d}/nsd_vdvae_features_31l.npz".format(sub),train_latents=train_latents,test_latents=test_latents)
 
