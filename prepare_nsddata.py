@@ -138,7 +138,7 @@ np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_stim_s
 
 print("Test data is saved.")
 
-annots_cur = np.load(os.environ["BRAIN_DATA_DIR"]+'/annots/COCO_73k_annots_curated.npy')
+annots_cur = np.load(os.environ["BRAIN_DATA_DIR"]+'/annots/COCO_73k_annots_curated.npy',allow_pickle=True)
 
 captions_array = np.empty((num_train,5),dtype=annots_cur.dtype)
 for i,idx in enumerate(train_im_idx):
