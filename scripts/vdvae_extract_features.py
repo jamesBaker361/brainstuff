@@ -36,7 +36,7 @@ args = parser.parse_args()
 sub=int(args.sub)
 assert sub in [1,2,5,7]
 batch_size=int(args.bs)
-
+print("os.environ[BRAIN_DATA_DIR]",os.environ["BRAIN_DATA_DIR"])
 print('Libs imported')
 
 H = {'image_size': 64, 'image_channels': 3,'seed': 0, 'port': 29500, 'save_dir': './saved_models/test', 'data_root': './', 'desc': 'test', 'hparam_sets': 'imagenet64', 'restore_path': 'imagenet64-iter-1600000-model.th', 'restore_ema_path': 'vdvae/model/imagenet64-iter-1600000-model-ema.th', 'restore_log_path': 'imagenet64-iter-1600000-log.jsonl', 'restore_optimizer_path': 'imagenet64-iter-1600000-opt.th', 'dataset': 'imagenet64', 'ema_rate': 0.999, 'enc_blocks': '64x11,64d2,32x20,32d2,16x9,16d2,8x8,8d2,4x7,4d4,1x5', 'dec_blocks': '1x2,4m1,4x3,8m4,8x7,16m8,16x15,32m16,32x31,64m32,64x12', 'zdim': 16, 'width': 512, 'custom_width_str': '', 'bottleneck_multiple': 0.25, 'no_bias_above': 64, 'scale_encblock': False, 'test_eval': True, 'warmup_iters': 100, 'num_mixtures': 10, 'grad_clip': 220.0, 'skip_threshold': 380.0, 'lr': 0.00015, 'lr_prior': 0.00015, 'wd': 0.01, 'wd_prior': 0.0, 'num_epochs': 10000, 'n_batch': 4, 'adam_beta1': 0.9, 'adam_beta2': 0.9, 'temperature': 1.0, 'iters_per_ckpt': 25000, 'iters_per_print': 1000, 'iters_per_save': 10000, 'iters_per_images': 10000, 'epochs_per_eval': 1, 'epochs_per_probe': None, 'epochs_per_eval_save': 1, 'num_images_visualize': 8, 'num_variables_visualize': 6, 'num_temperatures_visualize': 3, 'mpi_size': 1, 'local_rank': 0, 'rank': 0, 'logdir': './saved_models/test/log'}
@@ -109,6 +109,7 @@ for i,x in enumerate(trainloader):
             batch_latent.append(stats[i]['z'].cpu().numpy().reshape(len(data_input),-1))
         train_latents.append(np.hstack(batch_latent))
 train_latents = np.concatenate(train_latents)      
+
 
 np.savez(os.environ["BRAIN_DATA_DIR"]+"/extracted_features/subj{:02d}/nsd_vdvae_features_31l.npz".format(sub),train_latents=train_latents,test_latents=test_latents)
 
