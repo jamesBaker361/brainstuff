@@ -119,7 +119,7 @@ stim_array = np.zeros((num_train,im_dim,im_dim,im_c))
 for i,idx in enumerate(train_im_idx):
     stim_array[i] = stim[idx]
     fmri_array[i] = fmri[sorted(sig_train[idx])].mean(0)
-    print(i)
+    print(f"{i}/{len(train_im_idx)}")
 
 np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub),fmri_array )
 np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_stim_sub{}.npy'.format(sub,sub),stim_array )
@@ -131,7 +131,7 @@ stim_array = np.zeros((num_test,im_dim,im_dim,im_c))
 for i,idx in enumerate(test_im_idx):
     stim_array[i] = stim[idx]
     fmri_array[i] = fmri[sorted(sig_test[idx])].mean(0)
-    print(i)
+    print(f"{i}/{len(test_im_idx)}")
 
 np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub),fmri_array )
 np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_stim_sub{}.npy'.format(sub,sub),stim_array )
@@ -143,13 +143,13 @@ annots_cur = np.load(os.environ["BRAIN_DATA_DIR"]+'/annots/COCO_73k_annots_curat
 captions_array = np.empty((num_train,5),dtype=annots_cur.dtype)
 for i,idx in enumerate(train_im_idx):
     captions_array[i,:] = annots_cur[idx,:]
-    print(i)
+    print(f"{i}/{len(train_im_idx)}")
 np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_cap_sub{}.npy'.format(sub,sub),captions_array )
     
 captions_array = np.empty((num_test,5),dtype=annots_cur.dtype)
 for i,idx in enumerate(test_im_idx):
     captions_array[i,:] = annots_cur[idx,:]
-    print(i)
+    print(f"{i}/{len(test_im_idx)}")
 np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_cap_sub{}.npy'.format(sub,sub),captions_array )
 
 print("Caption data are saved.")
