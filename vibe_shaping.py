@@ -103,14 +103,31 @@ for i, idx in enumerate(train_im_idx):
         print(f"Train {i+1}/{num_train}: image {idx} from {len(trial_indices)} trials")
 
 # Assemble test fMRI/stim data similarly (optional)
-# num_test = len(test_im_idx)
-# fmri_test = np.zeros((num_test,) + vol_shape, dtype=np.float32)
-# stim_test = np.zeros((num_test, im_dim, im_dim, im_c), dtype=np.uint8)
-# for i, idx in enumerate(test_im_idx):
-#     stim_test[i] = stim[idx]
-#     trial_indices = sorted(sig_test[idx])
-#     fmri_test[i] = np.mean(fmri_4d[..., trial_indices], axis=-1)
+num_test = len(test_im_idx)
+fmri_test = np.zeros((num_test,) + vol_shape, dtype=np.float32)
+stim_test = np.zeros((num_test, im_dim, im_dim, im_c), dtype=np.uint8)
+for i, idx in enumerate(test_im_idx):
+    stim_test[i] = stim[idx]
+    trial_indices = sorted(sig_test[idx])
+    fmri_test[i] = np.mean(fmri_4d[..., trial_indices], axis=-1)
+    if i <3:
+        print('fmri_test[i].shape',fmri_test[i].shape)
+        print('sorted(sig_test[idx])',sorted(sig_test[idx]))
+        print('trial_indices',trial_indices)
+        print(f"Test {i+1}/{num_test}: image {idx} from {len(trial_indices)} trials")
 
 print("All done. Shapes:")
 print("fmri_train:", fmri_train.shape)
 print("stim_train:", stim_train.shape)
+
+# Save paired data to .npz
+save_path = os.environ["BRAIN_DATA_DIR"]+f"/subj{sub:02d}_fmri_stim_paired.npz"
+np.savez_compressed(
+    save_path,
+    fmri_train=fmri_train,
+    stim_train=stim_train,
+    fmri_test=fmri_test,
+    stim_test=stim_test
+)
+
+print(f"Saved paired data to {save_path}")
