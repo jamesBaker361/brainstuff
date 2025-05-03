@@ -105,6 +105,8 @@ for i in range(37):
     beta_f = nib.load(betas_dir+beta_filename).get_fdata().astype(np.float32)
     if i <3:
         print('beta_f.shape',beta_f.shape)
+        print('beta_f[mask>0]',beta_f[mask>0].shape)
+        print('beta_f[mask>0].transpose()',beta_f[mask>0].transpose().shape)
     fmri[i*750:(i+1)*750] = beta_f[mask>0].transpose()
     del beta_f
     
