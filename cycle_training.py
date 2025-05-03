@@ -20,6 +20,7 @@ parser.add_argument("--val_split",type=float,default=0.1)
 parser.add_argument("--kernel_size",type=int,default=4)
 parser.add_argument("--n_layers",type=int,default=6)
 parser.add_argument("--epochs",type=int,default=10)
+parser.add_argument("--use_discriminator",action="store_true")
 
 def main(args):
     accelerator=Accelerator(log_with="wandb",mixed_precision=args.mixed_precision,gradient_accumulation_steps=args.gradient_accumulation_steps)
