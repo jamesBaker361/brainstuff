@@ -3,6 +3,8 @@ from gpu_helpers import *
 from accelerate import Accelerator
 import argparse
 import time
+import numpy as np
+import os
 
 parser=argparse.ArgumentParser()
 parser.add_argument("--mixed_precision",type=str,default="no")
@@ -20,7 +22,17 @@ def main(args):
         "bf16":torch.bfloat16
     }[args.mixed_precision]
     with accelerator.autocast():
-        pass
+        train_data=[]
+        test_data=[]
+        subject_class_labels={
+            1:np.array([1,0,0,0]),
+            2:np.array([0,1,0,0]),
+            5:np.array([0,0,1,0]),
+            7:np.array([0,0,0,1])
+        }
+        for sub in [1, 2, 5, 7]:
+            path=os.environ["BRAIN_DATA_DIR"]+f"/subj{sub:02d}_fmri_stim_paired.npz"
+
 
 
 if __name__=='__main__':
