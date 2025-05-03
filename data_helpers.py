@@ -16,7 +16,7 @@ class BrainImageSubjectDataset(Dataset):
         return self.fmri_data[0].shape,self.image_data[0].shape, self.labels[0].sha[e]
     
     def __getitem__(self, idx):
-        fmri = torch.tensor(self.fmri_data[idx])
+        fmri = torch.tensor(self.fmri_data[idx]).unsqueeze(-1)
         image = torch.tensor(self.image_data[idx])
         label = torch.tensor(self.labels[idx])
 
