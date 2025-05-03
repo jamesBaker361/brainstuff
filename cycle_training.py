@@ -81,7 +81,7 @@ def main(args):
 
         test_dataset=BrainImageSubjectDataset(test_fmri,test_img,test_labels)
 
-        train_loader=DataLoader(train_dataset,batch_size=args.batch_size)
+        train_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
         pixel_to_voxel=PixelVoxelModel(image_size,fmri_size,args.n_layers,"pixel",args.kernel_size)
@@ -92,6 +92,11 @@ def main(args):
 
         train_loader, pixel_to_voxel,voxel_to_pixel,optimizer=accelerator.prepare(train_loader, pixel_to_voxel,voxel_to_pixel,optimizer)
 
+        for batch in train_loader:
+            break
+
+        print("img min, max",batch["image"].min(),batch["image"].max())
+        print("fmri min,max",batch["fmri"].min(),batch["fmri"].max())
         for e in range(1,args.epochs+1):
             validation_set=[]
             train_loss_dict={"ptov_loss":[],"vtop_loss":[]}
@@ -132,7 +137,7 @@ def main(args):
                         translated_data=trainable_model(data)
                         reconstructed_data=frozen_model(translated_data)
                         loss=F.mse_loss(data,reconstructed_data)
-                        train_loss_dict[key].append(loss.cpu().detach().item())
+                        val_loss_dict[key].append(loss.cpu().detach().item())
             metrics={
                 "train_ptov_loss":np.mean(train_loss_dict["ptov_loss"]),
                 "train_vtop_loss":np.mean(train_loss_dict["vtop_loss"]),
@@ -140,6 +145,25 @@ def main(args):
                 "val_vtop_loss":np.mean(val_loss_dict["vtop_loss"])
             }
             accelerator.log(metrics)
+        with torch.no_grad():
+            test_loss_dict={"ptov_loss":[],"vtop_loss":[]}
+            for batch in test_loader:
+                fmri=batch["fmri"]
+                images=batch["image"]
+                labels=batch["labels"]
+
+                for trainable_model,frozen_model,optimizer,data,key in zip([
+                    [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,"vtop_loss"],
+                    [pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,"ptov_loss"]]):
+                    trainable_model.requires_grad_(False)
+                    frozen_model.requires_grad_(False)
+                    translated_data=trainable_model(data)
+                    reconstructed_data=frozen_model(translated_data)
+                    loss=F.mse_loss(data,reconstructed_data)
+                    test_loss_dict[key].append(loss.cpu().detach().item())
+        accelerator.log({
+            "test_ptov_loss":np.mean()
+        })
 
 
 
