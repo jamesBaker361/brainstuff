@@ -7,6 +7,9 @@ import numpy as np
 import os
 from torch.utils.data import DataLoader
 from data_helpers import BrainImageSubjectDataset
+from modeling import PixelVoxelModel
+import random
+import torch.nn.functional as F
 
 parser=argparse.ArgumentParser()
 parser.add_argument("--mixed_precision",type=str,default="no")
@@ -14,6 +17,9 @@ parser.add_argument("--project_name",type=str,default="person")
 parser.add_argument("--gradient_accumulation_steps",type=int,default=4)
 parser.add_argument("--batch_size",type=int,default=4)
 parser.add_argument("--val_split",type=float,default=0.1)
+parser.add_argument("--kernel_size",type=int,default=4)
+parser.add_argument("--n_layers",type=int,default=6)
+parser.add_argument("--epochs",type=int,default=10)
 
 def main(args):
     accelerator=Accelerator(log_with="wandb",mixed_precision=args.mixed_precision,gradient_accumulation_steps=args.gradient_accumulation_steps)
@@ -64,14 +70,76 @@ def main(args):
 
 
         train_dataset=BrainImageSubjectDataset(train_fmri,train_img,train_labels)
+        for batch in train_dataset:
+            break
+
+        fmri_size=batch["fmri"].size()
+        image_size=batch["image"].size()
+
+        print("fmri size",fmri_size)
+        print("image size",image_size)
+
         test_dataset=BrainImageSubjectDataset(test_fmri,test_img,test_labels)
 
         train_loader=DataLoader(train_dataset,batch_size=args.batch_size)
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
+        pixel_to_voxel=PixelVoxelModel(image_size,fmri_size,args.n_layers,"pixel",args.kernel_size)
+        voxel_to_pixel=PixelVoxelModel(fmri_size,image_size,args.n_layers,"voxel",args.kernel_size)
 
-        
+        ptov_optimizer=torch.optim.AdamW([p for p in pixel_to_voxel.parameters()])
+        vtop_optimizer=torch.optim.AdamW([p for p in voxel_to_pixel.parameters()])
 
+        train_loader, pixel_to_voxel,voxel_to_pixel,optimizer=accelerator.prepare(train_loader, pixel_to_voxel,voxel_to_pixel,optimizer)
+
+        for e in range(1,args.epochs+1):
+            validation_set=[]
+            train_loss_dict={"ptov_loss":[],"vtop_loss":[]}
+            val_loss_dict={"ptov_loss":[],"vtop_loss":[]}
+            for batch in train_loader:
+                with accelerator.accumulate():
+                    if random.random() < args.val_split:
+                        validation_set.append(batch)
+                        continue
+
+                    fmri=batch["fmri"]
+                    images=batch["image"]
+                    labels=batch["labels"]
+
+                    for trainable_model,frozen_model,optimizer,data,key in zip([
+                        [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,"vtop_loss"],
+                        [pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,"ptov_loss"]]):
+                        trainable_model.requires_grad_(True)
+                        frozen_model.requires_grad_(False)
+                        optimizer.zero_grad()
+                        translated_data=trainable_model(data)
+                        reconstructed_data=frozen_model(translated_data)
+                        loss=F.mse_loss(data,reconstructed_data)
+                        train_loss_dict[key].append(loss.cpu().detach().item())
+                        accelerator.backward(loss)
+                        optimizer.step()
+            with torch.no_grad():
+                for batch in validation_set:
+                    fmri=batch["fmri"]
+                    images=batch["image"]
+                    labels=batch["labels"]
+
+                    for trainable_model,frozen_model,optimizer,data,key in zip([
+                        [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,"vtop_loss"],
+                        [pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,"ptov_loss"]]):
+                        trainable_model.requires_grad_(False)
+                        frozen_model.requires_grad_(False)
+                        translated_data=trainable_model(data)
+                        reconstructed_data=frozen_model(translated_data)
+                        loss=F.mse_loss(data,reconstructed_data)
+                        train_loss_dict[key].append(loss.cpu().detach().item())
+            metrics={
+                "train_ptov_loss":np.mean(train_loss_dict["ptov_loss"]),
+                "train_vtop_loss":np.mean(train_loss_dict["vtop_loss"]),
+                "val_ptov_loss":np.mean(val_loss_dict["ptov_loss"]),
+                "val_vtop_loss":np.mean(val_loss_dict["vtop_loss"])
+            }
+            accelerator.log(metrics)
 
 
 
