@@ -99,7 +99,7 @@ for i, idx in enumerate(train_im_idx):
     if i <3:
         print('fmri_train[i].shape',fmri_train[i].shape)
         print('sorted(sig_train[idx])',sorted(sig_train[idx]))
-        print('trial_indices',trial_indices.shape)
+        print('trial_indices',trial_indices)
         print(f"Train {i+1}/{num_train}: image {idx} from {len(trial_indices)} trials")
 
 # Assemble test fMRI/stim data similarly (optional)
