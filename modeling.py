@@ -131,7 +131,8 @@ class PixelVoxelModel(nn.Module):
         batch_size=x.size()[0]
         x= self.sequential(x)
         x=self.linear(x)
-        x=x.reshape((batch_size, *self.output_dim))
+        x=x.reshape((batch_size,-1, *self.intermediate_dim))
+        x=self.trans_seqential(x)
         return x
 
 '''class Discriminator(PixelVoxelModel):
