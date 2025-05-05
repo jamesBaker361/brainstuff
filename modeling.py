@@ -94,7 +94,7 @@ class PixelVoxelModel(nn.Module):
             "pixel":nn.ConvTranspose3d
         }
 
-        self.intermediate_dim=size_function(output_dim,n_layers,kernel_size,stride)
+        self.intermediate_dim=size_function(output_dim[1:],n_layers,kernel_size,stride)
 
         for _ in range(n_layers):
             out_channels=in_channels*2
