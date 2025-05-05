@@ -56,5 +56,5 @@ class Discriminator(nn.Module):
                   kernel_size:int, *args, **kwargs):
         super().__init__(*args, **kwargs)
         layers=[]
-        for _ in n_layers:
+        for _ in range(n_layers):
             layers.append()
