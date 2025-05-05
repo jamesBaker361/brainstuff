@@ -27,11 +27,15 @@ class PixelVoxelModel(nn.Module):
             "voxel":nn.Conv3d,
             "pixel":nn.Conv2d
         }[input_modality]
+        batch={
+            "voxel":nn.BatchNorm3d,
+            "pixel":nn.BatchNorm2d
+        }[input_modality]
 
         for _ in range(n_layers):
             out_channels=in_channels*4
             layers.append(conv(in_channels,out_channels,kernel_size,stride))
-            layers.append(nn.BatchNorm3d(out_channels))
+            layers.append(batch(out_channels))
             layers.append(nn.LeakyReLU())
             in_channels=out_channels
         layers.append(nn.Flatten())
