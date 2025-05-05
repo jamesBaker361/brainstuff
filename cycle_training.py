@@ -103,7 +103,7 @@ def main(args):
         ptov_optimizer=torch.optim.AdamW([p for p in pixel_to_voxel.parameters()])
         vtop_optimizer=torch.optim.AdamW([p for p in voxel_to_pixel.parameters()])
 
-        train_loader, pixel_to_voxel,voxel_to_pixel,optimizer=accelerator.prepare(train_loader, pixel_to_voxel,voxel_to_pixel,optimizer)
+        train_loader, pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer=accelerator.prepare(train_loader, pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer)
 
         for batch in train_loader:
             break
