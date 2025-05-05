@@ -79,8 +79,8 @@ def main(args):
         train_img=[np.transpose(i, (2,0,1)) for i in train_img]
         test_img=[np.transpose(i, (2,0,1)) for i in test_img]
 
-        train_fmri=[np.ndarray([f]) for f in train_fmri]
-        test_fmri=[np.ndarray([f]) for f in test_fmri]
+        train_fmri=[np.expand_dims(f,0) for f in train_fmri]
+        test_fmri=[np.expand_dims(f,0) for f in test_fmri]
 
         train_dataset=BrainImageSubjectDataset(train_fmri,train_img,train_labels)
         for batch in train_dataset:
