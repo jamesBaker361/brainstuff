@@ -291,6 +291,7 @@ def main(args):
                     metrics[f"{name}_{key}"]=np.mean(loss_dict[key])
             
             accelerator.log(metrics)
+        reconstructed_image_list=[]
         with torch.no_grad():
             test_loss_dict=init_loss_dict()
             for batch in test_loader:
@@ -298,18 +299,37 @@ def main(args):
                 images=batch["image"]
                 labels=batch["labels"]
 
-                for trainable_model,frozen_model,optimizer,data,key in zip([
-                    [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,"vtop_loss"],
-                    [pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,"ptov_loss"]]):
-                    trainable_model.requires_grad_(False)
-                    frozen_model.requires_grad_(False)
-                    translated_data=trainable_model(data)
-                    reconstructed_data=frozen_model(translated_data)
-                    loss=F.mse_loss(data,reconstructed_data)
-                    test_loss_dict[key].append(loss.cpu().detach().item())
-        accelerator.log({
-            "test_ptov_loss":np.mean()
-        })
+                for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
+                            [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,voxel_discriminator,vdisc_optimizer,"voxel_disc_real","voxel_disc_fake","voxel_gen"],
+                            #[pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]
+                            ]):
+                    if args.use_discriminator:
+                        true_labels=torch.ones((args.batch_size))
+                        translated_data=trainable_model(data)
+                        reconstructed_data=frozen_model(translated_data)
+                        predicted_labels=disc(reconstructed_data)
+                        gen_loss=bce_loss(predicted_labels,true_labels)
+                        test_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
+
+                    else:
+                        for trainable_model,frozen_model,optimizer,data,key in zip([
+                            [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,"vtop_loss"],
+                            [pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,"ptov_loss"]]):
+                            trainable_model.requires_grad_(False)
+                            frozen_model.requires_grad_(False)
+                            translated_data=trainable_model(data)
+                            reconstructed_data=frozen_model(translated_data)
+                            loss=F.mse_loss(data,reconstructed_data)
+                            test_loss_dict[key].append(loss.cpu().detach().item())
+                    reconstructed_image_list.append(reconstructed_data)
+            metrics={}
+            for name,loss_dict in zip(["test"],[test_loss_dict]):
+                if args.use_discriminator:
+                    key_list=["voxel_gen","pixel_gen"]
+                else:
+                    key_list=["ptov_loss","vtop_loss"]
+                for key in key_list:
+                    metrics[f"{name}_{key}"]=np.mean(loss_dict[key])
 
         #log images and maybe score their realism???
 
