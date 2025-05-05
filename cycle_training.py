@@ -111,15 +111,35 @@ def main(args):
         print("img min, max",batch["image"].min(),batch["image"].max())
 
         img=batch["image"]
-        pil_img=Image.fromarray(img) #good as is
-        pil_rescaled_img=Image.fromarray(img*255) #assuming its [0,1]
-        pil_rescaled_shifted_img=Image.fromarray(img*255 +128) #assuming its [-1,1]
+        try:
+            pil_img=Image.fromarray(img) #good as is
 
-        accelerator.log({
-            "pil_img":wandb.Image(pil_img),
-            "pil_rescaled_img":wandb.Image(pil_rescaled_img),
-            "pil_rescaled_shifted_img":wandb.Image(pil_rescaled_shifted_img)
-        })
+            accelerator.log({
+                "pil_img":wandb.Image(pil_img),
+            })
+        except Exception as e:
+            print("pil_img=Image.fromarray(img) failed")
+            print(e)
+
+        try:
+            pil_rescaled_img=Image.fromarray(img*255) #assuming its [0,1]
+            accelerator.log({
+                "pil_rescaled_img":wandb.Image(pil_rescaled_img)
+            })
+        except Exception as e:
+            print("Image.fromarray(img*255) failed")
+            print(e)
+
+        
+        try:
+            pil_rescaled_shifted_img=Image.fromarray(img*255 +128) #assuming its [-1,1]
+
+            accelerator.log({
+                "pil_rescaled_shifted_img":wandb.Image(pil_rescaled_shifted_img)
+            })
+        except Exception as e:
+            print("Image.fromarray(img*255 +128) failed")
+            print(e)
 
 
 
