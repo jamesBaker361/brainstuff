@@ -7,7 +7,7 @@ import numpy as np
 import os
 from torch.utils.data import DataLoader
 from data_helpers import BrainImageSubjectDataset
-from modeling import PixelVoxelModel
+from modeling import PixelVoxelModel,Discriminator
 import random
 import torch.nn.functional as F
 import wandb
@@ -107,8 +107,8 @@ def main(args):
         train_loader, pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer=accelerator.prepare(train_loader, pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer)
 
         if args.use_discriminator:
-            pixel_discriminator=PixelVoxelModel(image_size,(1),args.n_layers_disc,"pixel",args.kernel_size)
-            voxel_discriminator=PixelVoxelModel(fmri_size,(1),args.n_layers_disc,"voxel",args.kernel_size)
+            pixel_discriminator=Discriminator(image_size,args.n_layer,"pixel",args.kernel_size)
+            voxel_discriminator=Discriminator(fmri_size,args.n_layers,"voxel",args.kernel_size)
 
             pdisc_optimizer=torch.optim.AdamW([p for p in pixel_discriminator.parameters()])
             vdisc_optimizer=torch.optim.AdamW([p for p in voxel_discriminator.parameters()])
@@ -177,16 +177,20 @@ def main(args):
                             #train disc real batch
                             disc.requires_grad_(True)
                             trainable_model.requires_grad_(False)
+
                             true_labels=torch.ones((args.batch_size))
                             translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)
-                            predicted_labels=disc(true_labels)
+                            predicted_labels=disc(reconstructed_data)
+                            loss=bce_loss(predicted_labels,true_labels)
 
 
-
-                            
                             #train disc fake batch
-
+                            fake_labels=torch.zeros((args.batch_size))
+                            translated_data=trainable_model(data)
+                            reconstructed_data=frozen_model(translated_data)
+                            predicted_labels=disc(reconstructed_data)
+                            loss=bce_loss(predicted_labels,fake_labels)
 
                             #train gen
                             disc.requires_grad_(False)
