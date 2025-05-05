@@ -28,7 +28,7 @@ class PixelVoxelModel(nn.Module):
             "pixel":nn.Conv2d
         }[input_modality]
 
-        for _ in n_layers:
+        for _ in range(n_layers):
             out_channels=in_channels*4
             layers.append(conv(in_channels,out_channels,kernel_size,stride))
             layers.append(nn.BatchNorm3d(out_channels))
