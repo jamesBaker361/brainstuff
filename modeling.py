@@ -12,7 +12,7 @@ class PixelVoxelModel(nn.Module):
         super().__init__(*args, **kwargs)
         self.input_dim=input_dim
         self.output_dim=output_dim
-        if type(output_dim)==list or type(output_dim)==tuple:
+        if type(output_dim) not in (int,float):
             self.final_dim=1
             for d in output_dim:
                 self.final_dim*=d
