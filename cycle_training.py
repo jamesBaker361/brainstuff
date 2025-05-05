@@ -21,6 +21,7 @@ parser.add_argument("--kernel_size",type=int,default=4)
 parser.add_argument("--n_layers",type=int,default=6)
 parser.add_argument("--epochs",type=int,default=10)
 parser.add_argument("--use_discriminator",action="store_true")
+parser.add_argument("--sublist",nargs="*",type=int)
 
 def main(args):
     accelerator=Accelerator(log_with="wandb",mixed_precision=args.mixed_precision,gradient_accumulation_steps=args.gradient_accumulation_steps)
@@ -47,7 +48,11 @@ def main(args):
             5:np.array([0,0,1,0]),
             7:np.array([0,0,0,1])
         }
-        for sub in [1, 2, 5, 7]:
+        if args.sublist==None:
+            sublist=[1, 2, 5, 7]
+        else:
+            sublist=args.sublist
+        for sub in sublist:
             path=os.environ["BRAIN_DATA_DIR"]+f"/subj{sub:02d}_fmri_stim_paired.npz"
             npz_loaded=np.load(path)
             subject_fmri_train=npz_loaded["fmri_train"]
