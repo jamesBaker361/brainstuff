@@ -212,6 +212,8 @@ def main(args):
             "test_ptov_loss":np.mean()
         })
 
+        #log images and maybe score their realism???
+
 
 
 
