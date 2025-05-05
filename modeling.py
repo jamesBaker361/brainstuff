@@ -110,6 +110,7 @@ class PixelVoxelModel(nn.Module):
         print('zero output size',zero_output.size())
         dim=reduce(operator.mul,zero_output.size(),1)
         in_channels=2**(1+n_layers)
+        print(dim,in_channels,reduce(operator.mul, self.intermediate_dim, 1),in_channels*reduce(operator.mul, self.intermediate_dim, 1))
         self.linear=nn.Linear(dim,in_channels*reduce(operator.mul, self.intermediate_dim, 1))
 
         trans_layers=[]
