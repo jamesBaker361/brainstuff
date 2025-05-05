@@ -210,6 +210,7 @@ def main(args):
                             predicted_labels=disc(reconstructed_data)
                             gen_loss=bce_loss(predicted_labels,true_labels)
                             accelerator.backward(gen_loss)
+                            train_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
                             gen_optimizer.step()
 
                     else:
@@ -231,6 +232,8 @@ def main(args):
                     fmri=batch["fmri"]
                     images=batch["image"]
                     labels=batch["labels"]
+
+
 
                     for trainable_model,frozen_model,optimizer,data,key in zip([
                         [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,"vtop_loss"],
