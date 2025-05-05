@@ -57,11 +57,11 @@ class PixelVoxelModel(nn.Module):
         x=x.reshape((batch_size, *self.output_dim))
         return x
 
-class Discriminator(PixelVoxelModel):
+'''class Discriminator(PixelVoxelModel):
     
     def forward(self,x):
         x= super().forward(x)
         x=nn.Sigmoid()(x)
-        return x
+        return x'''
 
         
