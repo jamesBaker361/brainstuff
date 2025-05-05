@@ -78,8 +78,8 @@ class PixelVoxelModel(nn.Module):
         layers=[]
         in_channels=input_dim[0]
         size_function={
-            "voxel":compute_input_size_3d,
-            "pixel":compute_input_size
+            "voxel":compute_input_size,
+            "pixel":compute_input_size_3d
         }[input_modality]
         conv={
             "voxel":nn.Conv3d,
