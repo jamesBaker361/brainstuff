@@ -52,6 +52,7 @@ class PixelVoxelModel(nn.Module):
 
 class Discriminator(nn.Module):
     def __init__(self,n_layers,
+                 input_modality:str, #one of voxel or pixel
                   kernel_size:int, *args, **kwargs):
         super().__init__(*args, **kwargs)
         layers=[]
