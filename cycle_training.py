@@ -249,7 +249,7 @@ def main(args):
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data)
                             d_loss_real=bce_loss(predicted_labels,true_labels)
-                            test_loss_dict[real_key].append(d_loss_real.cpu().detach().item())
+                            val_loss_dict[real_key].append(d_loss_real.cpu().detach().item())
 
 
                             #train disc fake batch
@@ -258,7 +258,7 @@ def main(args):
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data)
                             d_loss_fake=bce_loss(predicted_labels,fake_labels)
-                            test_loss_dict[fake_key].append(d_loss_fake.cpu().detach().item())
+                            val_loss_dict[fake_key].append(d_loss_fake.cpu().detach().item())
 
 
                             #train gen
@@ -269,7 +269,7 @@ def main(args):
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data)
                             gen_loss=bce_loss(predicted_labels,true_labels)
-                            test_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
+                            val_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
                     else:
 
                         for trainable_model,frozen_model,optimizer,data,key in zip([
@@ -281,12 +281,15 @@ def main(args):
                             reconstructed_data=frozen_model(translated_data)
                             loss=F.mse_loss(data,reconstructed_data)
                             val_loss_dict[key].append(loss.cpu().detach().item())
-            metrics={
-                "train_ptov_loss":np.mean(train_loss_dict["ptov_loss"]),
-                "train_vtop_loss":np.mean(train_loss_dict["vtop_loss"]),
-                "val_ptov_loss":np.mean(val_loss_dict["ptov_loss"]),
-                "val_vtop_loss":np.mean(val_loss_dict["vtop_loss"])
-            }
+            metrics={}
+            for name,m_dict in zip(["val","train"],[val_loss_dict,train_loss_dict]):
+                    if args.use_discriminator:
+                        key_list=["voxel_disc_real","voxel_disc_fake","voxel_gen","pixel_disc_real","pixel_disc_fake","pixel_gen"]
+                    else:
+                        key_list=["ptov_loss","vtop_loss"]
+                    for key in key_list:
+                        metrics[f"{name}_{key}"]=np.mean(m_dict[key])
+            
             accelerator.log(metrics)
         with torch.no_grad():
             test_loss_dict={"ptov_loss":[],"vtop_loss":[]}
