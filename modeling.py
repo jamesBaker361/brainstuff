@@ -51,10 +51,17 @@ class PixelVoxelModel(nn.Module):
         return x
 
 class Discriminator(nn.Module):
-    def __init__(self,n_layers,
+    def __init__(self,
+                 input_dim,
+                 n_layers,
                  input_modality:str, #one of voxel or pixel
                   kernel_size:int, *args, **kwargs):
         super().__init__(*args, **kwargs)
         layers=[]
+        conv={
+            "voxel":nn.Conv3d,
+            "pixel":nn.Conv2d
+        }[input_modality]
+        in_channels=input_dim[-1]
         for _ in range(n_layers):
             layers.append()
