@@ -106,12 +106,14 @@ def main(args):
 
         train_loader, pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer=accelerator.prepare(train_loader, pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer)
 
-        if args.use_discriminator:
-            pixel_discriminator=PixelVoxelModel(image_size,(1),args.n_layers_disc,"pixel",args.kernel_size)
-            voxel_discriminator=PixelVoxelModel(fmri_size,(1),args.n_layers_disc,"voxel",args.kernel_size)
+        #if args.use_discriminator:
+        pixel_discriminator=PixelVoxelModel(image_size,(1),args.n_layers_disc,"pixel",args.kernel_size)
+        voxel_discriminator=PixelVoxelModel(fmri_size,(1),args.n_layers_disc,"voxel",args.kernel_size)
 
-            pdisc_optimizer=torch.optim.AdamW([p for p in pixel_discriminator.parameters()])
-            vdisc_optimizer=torch.optim.AdamW([p for p in voxel_discriminator.parameters()])
+        pdisc_optimizer=torch.optim.AdamW([p for p in pixel_discriminator.parameters()])
+        vdisc_optimizer=torch.optim.AdamW([p for p in voxel_discriminator.parameters()])
+
+        pixel_discriminator,voxel_discriminator,pdisc_optimizer,vdisc_optimizer=accelerator.prepare(pixel_discriminator,voxel_discriminator,pdisc_optimizer,vdisc_optimizer)
 
         for batch in train_loader:
             break
