@@ -330,7 +330,7 @@ def main(args):
                     key_list=["ptov_loss","vtop_loss"]
                 for key in key_list:
                     metrics[f"{name}_{key}"]=np.mean(loss_dict[key])
-
+        accelerator.log(metrics)
         #log images and maybe score their realism???
 
 
