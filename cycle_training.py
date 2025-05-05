@@ -177,12 +177,13 @@ def main(args):
                             #train disc real batch
                             disc.requires_grad_(True)
                             trainable_model.requires_grad_(False)
+                            disc_optimizer.zero_grad()
 
                             true_labels=torch.ones((args.batch_size))
                             translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data)
-                            loss=bce_loss(predicted_labels,true_labels)
+                            d_loss=bce_loss(predicted_labels,true_labels)
 
 
                             #train disc fake batch
@@ -190,11 +191,14 @@ def main(args):
                             translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data)
-                            loss=bce_loss(predicted_labels,fake_labels)
+                            d_loss+=bce_loss(predicted_labels,fake_labels)
+                            accelerator.backward(d_loss)
+                            disc_optimizer.step()
 
                             #train gen
                             disc.requires_grad_(False)
                             trainable_model.requires_grad_(True)
+
                     else:
 
                         for trainable_model,frozen_model,optimizer,data,key in zip([
