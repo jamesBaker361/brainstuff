@@ -10,6 +10,8 @@ from data_helpers import BrainImageSubjectDataset
 from modeling import PixelVoxelModel
 import random
 import torch.nn.functional as F
+import wandb
+from PIL import Image
 
 parser=argparse.ArgumentParser()
 parser.add_argument("--mixed_precision",type=str,default="no")
@@ -102,6 +104,20 @@ def main(args):
             break
 
         print("img min, max",batch["image"].min(),batch["image"].max())
+
+        img=batch["image"]
+        pil_img=Image.fromarray(img) #good as is
+        pil_rescaled_img=Image.fromarray(img*255) #assuming its [0,1]
+        pil_rescaled_shifted_img=Image.fromarray(img*255 +128) #assuming its [-1,1]
+
+        accelerator.log({
+            "pil_img":wandb.Image(pil_img),
+            "pil_rescaled_img":wandb.Image(pil_rescaled_img),
+            "pil_rescaled_shifted_img":wandb.Image(pil_rescaled_shifted_img)
+        })
+
+
+
         print("fmri min,max",batch["fmri"].min(),batch["fmri"].max())
         for e in range(1,args.epochs+1):
             validation_set=[]
