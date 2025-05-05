@@ -45,6 +45,7 @@ class PixelVoxelModel(nn.Module):
         zero_output=self.sequential(zero_tensor)
         print('zero output size',zero_output.size())
         dim=zero_output.size()[1]
+        print(dim,self.final_dim)
         self.linear=nn.Linear(dim,self.final_dim)
         self.layers=nn.ModuleList(layers+[nn.Linear])
         
