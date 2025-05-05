@@ -156,7 +156,9 @@ def main(args):
         print("fmri min,max",batch["fmri"].min(),batch["fmri"].max())
         for e in range(1,args.epochs+1):
             validation_set=[]
-            train_loss_dict={"ptov_loss":[],"vtop_loss":[]}
+            train_loss_dict={"ptov_loss":[],"vtop_loss":[],
+                             "voxel_disc_real":[],"voxel_disc_fake":[],"voxel_gen":[],
+                             "pixel_disc_real":[],"pixel_disc_fake":[],"pixel_gen":[]}
             val_loss_dict={"ptov_loss":[],"vtop_loss":[]}
             for batch in train_loader:
                 with accelerator.accumulate():
@@ -169,9 +171,9 @@ def main(args):
                     labels=batch["labels"]
 
                     if args.use_discriminator:
-                        for trainable_model,frozen_model,gen_optimizer,data,key,disc,disc_optimizer in zip([
-                            [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,"vtop_loss",voxel_discriminator,vdisc_optimizer],
-                            [pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,"ptov_loss",pixel_discriminator,pdisc_optimizer]]):
+                        for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
+                            [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,voxel_discriminator,vdisc_optimizer,"voxel_disc_real","voxel_disc_fake","voxel_gen"],
+                            [pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]):
                             frozen_model.requires_grad_(False)
 
                             #train disc real batch
@@ -183,7 +185,9 @@ def main(args):
                             translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data)
-                            d_loss=bce_loss(predicted_labels,true_labels)
+                            d_loss_real=bce_loss(predicted_labels,true_labels)
+                            accelerator.backward(d_loss_real)
+                            train_loss_dict[real_key].append(d_loss_real.cpu().detach().item())
 
 
                             #train disc fake batch
@@ -191,13 +195,22 @@ def main(args):
                             translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data)
-                            d_loss+=bce_loss(predicted_labels,fake_labels)
-                            accelerator.backward(d_loss)
+                            d_loss_fake=bce_loss(predicted_labels,fake_labels)
+                            accelerator.backward(d_loss_fake)
+                            train_loss_dict[fake_key].append(d_loss_fake.cpu().detach().item())
+                            #Sd_loss=d_loss_fake+d_loss_real
                             disc_optimizer.step()
 
                             #train gen
                             disc.requires_grad_(False)
                             trainable_model.requires_grad_(True)
+                            true_labels=torch.ones((args.batch_size))
+                            translated_data=trainable_model(data)
+                            reconstructed_data=frozen_model(translated_data)
+                            predicted_labels=disc(reconstructed_data)
+                            gen_loss=bce_loss(predicted_labels,true_labels)
+                            accelerator.backward(gen_loss)
+                            gen_optimizer.step()
 
                     else:
 
