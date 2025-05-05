@@ -111,7 +111,7 @@ class PixelVoxelModel(nn.Module):
         dim=1
         for m in zero_output.size():
             dim*=m
-        in_channels=2**(1+n_layers)
+        in_channels=pow(2,1+n_layers)
         flat_intermediate_dim=1
         for n in self.intermediate_dim:
             flat_intermediate_dim*=n
