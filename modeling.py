@@ -21,7 +21,7 @@ class PixelVoxelModel(nn.Module):
 
         stride=kernel_size//2
         layers=[]
-        in_channels=input_dim[-1]
+        in_channels=input_dim[0]
 
         conv={
             "voxel":nn.Conv3d,
@@ -62,6 +62,11 @@ class Discriminator(nn.Module):
             "voxel":nn.Conv3d,
             "pixel":nn.Conv2d
         }[input_modality]
-        in_channels=input_dim[-1]
+        in_channels=input_dim[0]
+        stride=kernel_size//2
         for _ in range(n_layers):
-            layers.append()
+            out_channels=in_channels*4
+            layers.append(conv(in_channels,out_channels,kernel_size,stride))
+            layers.append(nn.BatchNorm3d(out_channels))
+            layers.append(nn.LeakyReLU())
+            in_channels=out_channels
