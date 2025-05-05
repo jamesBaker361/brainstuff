@@ -76,8 +76,8 @@ def main(args):
             test_img.extend(subject_stim_test)
             test_labels.extend(subject_test_labels)
 
-        train_img=[i.reshape(2,0,1) for i in train_img]
-        test_img=[i.reshape(2,0,1) for i in test_img]
+        train_img=[np.transpose(i, (2,0,1)) for i in train_img]
+        test_img=[np.transpose(i, (2,0,1)) for i in test_img]
 
         train_fmri=[[f] for f in train_fmri]
         test_fmri=[[f] for f in test_fmri]
