@@ -139,11 +139,50 @@ class PixelVoxelModel(nn.Module):
         print("self.trans_seqential(x)",x.size())
         return x
 
-'''class Discriminator(PixelVoxelModel):
-    
-    def forward(self,x):
-        x= super().forward(x)
-        x=nn.Sigmoid()(x)
-        return x'''
+class Discriminator(nn.Module):
+    def __init__(self,
+                 input_dim,
+                 n_layers,
+                  input_modality:str, #one of voxel or pixel
+                  kernel_size:int,
+                    *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.input_dim=input_dim
 
         
+
+        stride=kernel_size//2
+        layers=[]
+        in_channels=input_dim[0]
+        conv={
+            "voxel":nn.Conv3d,
+            "pixel":nn.Conv2d
+        }[input_modality]
+        batch={
+            "voxel":nn.BatchNorm3d,
+            "pixel":nn.BatchNorm2d
+        }[input_modality]
+
+        for _ in range(n_layers):
+            out_channels=in_channels*2
+            layers.append(conv(in_channels,out_channels,kernel_size,stride))
+            layers.append(batch(out_channels))
+            layers.append(nn.LeakyReLU())
+            in_channels=out_channels
+        layers.append(nn.Flatten())
+        self.sequential=nn.Sequential(*layers)
+        zero_tensor=torch.zeros(input_dim).unsqueeze(0)
+        print('zero_tensor.size()',zero_tensor.size())
+        zero_output=self.sequential(zero_tensor)
+        print('zero output size',zero_output.size())
+        dim=reduce(operator.mul,zero_output.size(),1)
+        in_channels=2**(1+n_layers)
+        self.linear=nn.Linear(dim,1)
+
+        self.layers=nn.ModuleList(layers+[self.linear])
+
+    def forward(self,x):
+        x= self.sequential(x)
+        #print("self.sequential(x)",x.size())
+        x=self.linear(x)
+        return x
