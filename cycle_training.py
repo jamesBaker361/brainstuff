@@ -21,6 +21,7 @@ parser.add_argument("--batch_size",type=int,default=4)
 parser.add_argument("--val_split",type=float,default=0.1)
 parser.add_argument("--kernel_size",type=int,default=4)
 parser.add_argument("--n_layers",type=int,default=6)
+parser.add_argument("--n_layers_disc",type=int,default=4)
 parser.add_argument("--epochs",type=int,default=10)
 parser.add_argument("--use_discriminator",action="store_true")
 parser.add_argument("--sublist",nargs="*",type=int)
@@ -104,6 +105,13 @@ def main(args):
         vtop_optimizer=torch.optim.AdamW([p for p in voxel_to_pixel.parameters()])
 
         train_loader, pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer=accelerator.prepare(train_loader, pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer)
+
+        if args.use_discriminator:
+            pixel_discriminator=PixelVoxelModel(image_size,(1),args.n_layers_disc,"pixel",args.kernel_size)
+            voxel_discriminator=PixelVoxelModel(fmri_size,(1),args.n_layers_disc,"voxel",args.kernel_size)
+
+            pdisc_optimizer=torch.optim.AdamW([p for p in pixel_discriminator.parameters()])
+            vdisc_optimizer=torch.optim.AdamW([p for p in voxel_discriminator.parameters()])
 
         for batch in train_loader:
             break
