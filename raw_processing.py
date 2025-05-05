@@ -13,6 +13,8 @@ args = parser.parse_args()
 sub = int(args.sub)
 assert sub in [1, 2, 5, 7]
 
+print(args)
+
 # Load .mat file helper
 def loadmat(filename):
     def _check_keys(d):
