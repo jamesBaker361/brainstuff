@@ -153,15 +153,15 @@ def main(args):
 
 
 
+        def init_loss_dict():
+            return {"ptov_loss":[],"vtop_loss":[],
+                             "voxel_disc_real":[],"voxel_disc_fake":[],"voxel_gen":[],
+                             "pixel_disc_real":[],"pixel_disc_fake":[],"pixel_gen":[]}
         print("fmri min,max",batch["fmri"].min(),batch["fmri"].max())
         for e in range(1,args.epochs+1):
             validation_set=[]
-            train_loss_dict={"ptov_loss":[],"vtop_loss":[],
-                             "voxel_disc_real":[],"voxel_disc_fake":[],"voxel_gen":[],
-                             "pixel_disc_real":[],"pixel_disc_fake":[],"pixel_gen":[]}
-            val_loss_dict={"ptov_loss":[],"vtop_loss":[],
-                             "voxel_disc_real":[],"voxel_disc_fake":[],"voxel_gen":[],
-                             "pixel_disc_real":[],"pixel_disc_fake":[],"pixel_gen":[]}
+            train_loss_dict=init_loss_dict()
+            val_loss_dict=init_loss_dict()
             for batch in train_loader:
                 with accelerator.accumulate():
                     if random.random() < args.val_split:
@@ -282,17 +282,17 @@ def main(args):
                             loss=F.mse_loss(data,reconstructed_data)
                             val_loss_dict[key].append(loss.cpu().detach().item())
             metrics={}
-            for name,m_dict in zip(["val","train"],[val_loss_dict,train_loss_dict]):
-                    if args.use_discriminator:
-                        key_list=["voxel_disc_real","voxel_disc_fake","voxel_gen","pixel_disc_real","pixel_disc_fake","pixel_gen"]
-                    else:
-                        key_list=["ptov_loss","vtop_loss"]
-                    for key in key_list:
-                        metrics[f"{name}_{key}"]=np.mean(m_dict[key])
+            for name,loss_dict in zip(["val","train"],[val_loss_dict,train_loss_dict]):
+                if args.use_discriminator:
+                    key_list=["voxel_disc_real","voxel_disc_fake","voxel_gen","pixel_disc_real","pixel_disc_fake","pixel_gen"]
+                else:
+                    key_list=["ptov_loss","vtop_loss"]
+                for key in key_list:
+                    metrics[f"{name}_{key}"]=np.mean(loss_dict[key])
             
             accelerator.log(metrics)
         with torch.no_grad():
-            test_loss_dict={"ptov_loss":[],"vtop_loss":[]}
+            test_loss_dict=init_loss_dict()
             for batch in test_loader:
                 fmri=batch["fmri"]
                 images=batch["image"]
