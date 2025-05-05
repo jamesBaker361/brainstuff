@@ -65,6 +65,7 @@ class PixelVoxelModel(nn.Module):
                  input_dim,
                  output_dim,
                  n_layers,
+                 n_layers_trans:int,
                   input_modality:str, #one of voxel or pixel
                   kernel_size:int,
                     *args, **kwargs):
@@ -94,7 +95,7 @@ class PixelVoxelModel(nn.Module):
             "pixel":nn.ConvTranspose3d
         }
 
-        self.intermediate_dim=size_function(output_dim[1:],n_layers,kernel_size,stride)
+        self.intermediate_dim=size_function(output_dim[1:],n_layers_trans,kernel_size,stride)
 
         for _ in range(n_layers):
             out_channels=in_channels*2
@@ -111,7 +112,7 @@ class PixelVoxelModel(nn.Module):
         dim=1
         for m in zero_output.size():
             dim*=m
-        in_channels=pow(2,1+n_layers)
+        in_channels=pow(2,1+n_layers_trans)
         print(self.intermediate_dim)
         flat_intermediate_dim=1
         for n in self.intermediate_dim:
@@ -121,7 +122,7 @@ class PixelVoxelModel(nn.Module):
         self.linear=nn.Linear(dim,in_channels* flat_intermediate_dim)
 
         trans_layers=[]
-        for _ in range(n_layers):
+        for _ in range(n_layers_trans):
             out_channels=out_channels*2
             trans_layers.append(conv_trans(in_channels,out_channels,kernel_size,stride))
             trans_layers.append(nn.LeakyReLU())

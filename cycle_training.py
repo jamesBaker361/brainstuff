@@ -21,6 +21,7 @@ parser.add_argument("--batch_size",type=int,default=4)
 parser.add_argument("--val_split",type=float,default=0.1)
 parser.add_argument("--kernel_size",type=int,default=4)
 parser.add_argument("--n_layers",type=int,default=6)
+parser.add_argument("--n_layers_trans",type=int,default=6)
 parser.add_argument("--n_layers_disc",type=int,default=4)
 parser.add_argument("--epochs",type=int,default=10)
 parser.add_argument("--use_discriminator",action="store_true")
@@ -98,8 +99,8 @@ def main(args):
         train_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
-        pixel_to_voxel=PixelVoxelModel(image_size,fmri_size,args.n_layers,"pixel",args.kernel_size)
-        voxel_to_pixel=PixelVoxelModel(fmri_size,image_size,args.n_layers,"voxel",args.kernel_size)
+        pixel_to_voxel=PixelVoxelModel(image_size,fmri_size,args.n_layers,args.n_layers_trans,"pixel",args.kernel_size)
+        voxel_to_pixel=PixelVoxelModel(fmri_size,image_size,args.n_layers,args.n_layers_trans,"voxel",args.kernel_size)
 
         ptov_optimizer=torch.optim.AdamW([p for p in pixel_to_voxel.parameters()])
         vtop_optimizer=torch.optim.AdamW([p for p in voxel_to_pixel.parameters()])
