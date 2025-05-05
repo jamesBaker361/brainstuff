@@ -37,8 +37,10 @@ class PixelVoxelModel(nn.Module):
         layers.append(nn.Flatten())
         self.sequential=nn.Sequential(*layers)
         zero_tensor=torch.zeros(input_dim).unsqueeze(0)
+        print('zero_tensor.size()',zero_tensor.size())
         zero_output=self.sequential(zero_tensor)
-        dim=zero_output.size()[-1]
+        print('zero output size',zero_output.size())
+        dim=zero_output.size()[1]
         self.linear=nn.Linear(dim,self.final_dim)
         self.layers=nn.ModuleList(layers+[nn.Linear])
         
