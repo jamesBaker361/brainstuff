@@ -132,7 +132,7 @@ def main(args):
         img=img.unsqueeze(0).cpu().permute(0, 2, 3, 1).float().numpy()
         try:
             pil_img=Image.fromarray(img) #good as is
-
+            pil_img.save("img.png")
             accelerator.log({
                 "pil_img":wandb.Image(pil_img),
             })
@@ -142,6 +142,7 @@ def main(args):
 
         try:
             pil_rescaled_img=Image.fromarray(img*255) #assuming its [0,1]
+            pil_rescaled_img.save("img_rescaled.png")
             accelerator.log({
                 "pil_rescaled_img":wandb.Image(pil_rescaled_img)
             })
@@ -152,7 +153,7 @@ def main(args):
         
         try:
             pil_rescaled_shifted_img=Image.fromarray(img*255 +128) #assuming its [-1,1]
-
+            pil_rescaled_img.save("img_rescaled_shifted.png")
             accelerator.log({
                 "pil_rescaled_shifted_img":wandb.Image(pil_rescaled_shifted_img)
             })
