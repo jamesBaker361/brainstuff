@@ -3,62 +3,21 @@ from torch import nn
 from functools import reduce
 import operator
 
-def compute_input_size(output_size, n_layers, kernel_size=4, stride=2, padding=0, output_padding=0):
-    """
-    Computes the input size needed to achieve a desired output size after a sequence of ConvTranspose2d layers.
-
-    Parameters:
-    - output_size (int or tuple): Target output size (H, W) or single int if square.
-    - n_layers (int): Number of ConvTranspose2d layers.
-    - kernel_size (int): Kernel size used in each layer.
-    - stride (int): Stride used in each layer.
-    - padding (int): Padding used in each layer.
-    - output_padding (int): Output padding used in each layer.
-
-    Returns:
-    - input_size (tuple): Required input size (H, W)
-    """
-    if isinstance(output_size, int):
-        output_size = (output_size, output_size)
-
-    h, w = output_size
-
+def compute_input_size(output_size, n_layers, kernel_size=4, stride=2,):
+    factor=kernel_size//stride
+    dim=output_size[-1]
     for _ in range(n_layers):
-        h = (h - kernel_size - output_padding + 2 * padding) // stride + 1
-        w = (w - kernel_size - output_padding + 2 * padding) // stride + 1
-
-    return h, w
+        dim=dim//factor
+    return dim,dim
 
 
 def compute_input_size_3d(output_size, n_layers,
-                          kernel_size=4, stride=2, padding=0, output_padding=0):
-    """
-    Compute required input size (D, H, W) for ConvTranspose3d layers.
-
-    Parameters:
-    - output_size: tuple of (D, H, W) desired final output
-    - n_layers: number of ConvTranspose3d layers
-    - kernel_size, stride, padding, output_padding: can be int or 3-tuple
-
-    Returns:
-    - input_size: tuple of (D, H, W)
-    """
-    def to_triple(x):
-        return (x, x, x) if isinstance(x, int) else x
-
-    kd, kh, kw = to_triple(kernel_size)
-    sd, sh, sw = to_triple(stride)
-    pd, ph, pw = to_triple(padding)
-    opd, oph, opw = to_triple(output_padding)
-
-    d, h, w = output_size
-
+                          kernel_size=4, stride=2):
+    factor=kernel_size//stride
+    dim=output_size[-1]
     for _ in range(n_layers):
-        d = (d - kd - opd + 2 * pd) // sd + 1
-        h = (h - kh - oph + 2 * ph) // sh + 1
-        w = (w - kw - opw + 2 * pw) // sw + 1
-
-    return (d, h, w)
+        dim=dim//factor
+    return dim,dim,dim
 
 class PixelVoxelModel(nn.Module):
     def __init__(self,
