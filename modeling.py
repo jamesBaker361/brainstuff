@@ -82,7 +82,7 @@ class PixelVoxelModel(nn.Module):
             "voxel":compute_input_size,
             "pixel":compute_input_size_3d
         }[input_modality]
-        conv={
+        down_layer={
             "voxel":nn.Conv3d,
             "pixel":nn.Conv2d
         }[input_modality]
@@ -90,7 +90,7 @@ class PixelVoxelModel(nn.Module):
             "voxel":nn.BatchNorm3d,
             "pixel":nn.BatchNorm2d
         }[input_modality]
-        conv_trans={
+        up_layer={
             "voxel":nn.ConvTranspose2d,
             "pixel":nn.ConvTranspose3d
         }[input_modality]
@@ -99,7 +99,7 @@ class PixelVoxelModel(nn.Module):
 
         for _ in range(n_layers):
             out_channels=in_channels*2
-            layers.append(conv(in_channels,out_channels,kernel_size,stride))
+            layers.append(down_layer(in_channels,out_channels,kernel_size,stride))
             layers.append(batch(out_channels))
             layers.append(nn.LeakyReLU())
             in_channels=out_channels
@@ -124,13 +124,13 @@ class PixelVoxelModel(nn.Module):
         trans_layers=[]
         for _ in range(n_layers_trans):
             out_channels=out_channels*2
-            trans_layers.append(conv_trans(in_channels,out_channels,kernel_size,stride))
+            trans_layers.append(up_layer(in_channels,out_channels,kernel_size,stride))
             trans_layers.append(nn.LeakyReLU())
             in_channels=out_channels
 
         #self.final_conv=conv_trans(in_channels,output_dim[1],1,1)
 
-        trans_layers.append(conv_trans(in_channels,output_dim[1],1,1))
+        trans_layers.append(up_layer(in_channels,output_dim[1],1,1))
         self.trans_seqential=nn.Sequential(*trans_layers)
 
         self.layers=nn.ModuleList(layers+[self.linear]+trans_layers)
