@@ -130,7 +130,7 @@ class PixelVoxelModel(nn.Module):
 
         #self.final_conv=conv_trans(in_channels,output_dim[1],1,1)
 
-        trans_layers.append(up_layer(in_channels,output_dim[1],1,1))
+        trans_layers.append(up_layer(in_channels,output_dim[0],1,1))
         self.trans_seqential=nn.Sequential(*trans_layers)
 
         self.layers=nn.ModuleList(layers+[self.linear]+trans_layers)
