@@ -120,10 +120,15 @@ def main(args):
             break
 
         img=batch["image"]
+        fmri=batch["fmri"]
         print("img min, max",img.min(),img.max())
+        print("fmri min,max",fmri.min(),fmri.max())
 
         with torch.no_grad():
-            gen_img=voxel_to_pixel()
+            gen_img=voxel_to_pixel(fmri.unsqueeze(0))
+            print("gen_img max,min,size",gen_img.max(),gen_img.min(),gen_img.size())
+            gen_fmri=pixel_to_voxel(img.unsqueeze(0))
+            print("gen fmri max,min,size",gen_fmri.max(),gen_fmri.min(),gen_fmri.size())
         img=img.unsqueeze(0).cpu().permute(0, 2, 3, 1).float().numpy()
         try:
             pil_img=Image.fromarray(img) #good as is
@@ -161,7 +166,7 @@ def main(args):
             return {"ptov_loss":[],"vtop_loss":[],
                              "voxel_disc_real":[],"voxel_disc_fake":[],"voxel_gen":[],
                              "pixel_disc_real":[],"pixel_disc_fake":[],"pixel_gen":[]}
-        print("fmri min,max",batch["fmri"].min(),batch["fmri"].max())
+        
         for e in range(1,args.epochs+1):
             validation_set=[]
             train_loss_dict=init_loss_dict()
