@@ -12,6 +12,7 @@ import random
 import torch.nn.functional as F
 import wandb
 from PIL import Image
+import torchvision
 
 parser=argparse.ArgumentParser()
 parser.add_argument("--mixed_precision",type=str,default="no")
@@ -84,7 +85,13 @@ def main(args):
         train_fmri=[np.expand_dims(f,0) for f in train_fmri]
         test_fmri=[np.expand_dims(f,0) for f in test_fmri]
 
-        train_dataset=BrainImageSubjectDataset(train_fmri,train_img,train_labels)
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Resize((512,512)),
+            torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+        ])
+
+        train_dataset=BrainImageSubjectDataset(train_fmri,train_img,train_labels,transform=transform)
         for batch in train_dataset:
             break
 
@@ -93,6 +100,8 @@ def main(args):
 
         print("fmri size",fmri_size)
         print("image size",image_size)
+
+        
 
         test_dataset=BrainImageSubjectDataset(test_fmri,test_img,test_labels)
 
