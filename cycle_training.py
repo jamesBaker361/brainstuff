@@ -120,10 +120,11 @@ def main(args):
             break
 
         img=batch["image"]
-        print("img min, max",batch["image"].min(),batch["image"].max())
+        print("img min, max",img.min(),img.max())
 
         with torch.no_grad():
             gen_img=voxel_to_pixel()
+        img=img.unsqueeze(0).cpu().permute(0, 2, 3, 1).float().numpy()
         try:
             pil_img=Image.fromarray(img) #good as is
 
