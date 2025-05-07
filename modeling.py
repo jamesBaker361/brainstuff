@@ -93,7 +93,7 @@ class PixelVoxelModel(nn.Module):
         conv_trans={
             "voxel":nn.ConvTranspose2d,
             "pixel":nn.ConvTranspose3d
-        }
+        }[input_modality]
 
         self.intermediate_dim=size_function(output_dim[1:],n_layers_trans,kernel_size,stride)
 
