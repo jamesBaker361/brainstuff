@@ -125,9 +125,9 @@ def main(args):
         print("fmri min,max",fmri.min(),fmri.max())
 
         with torch.no_grad():
-            gen_img=voxel_to_pixel(fmri.unsqueeze(0))
+            gen_img=voxel_to_pixel(fmri)
             print("gen_img max,min,size",gen_img.max(),gen_img.min(),gen_img.size())
-            gen_fmri=pixel_to_voxel(img.unsqueeze(0))
+            gen_fmri=pixel_to_voxel(img)
             print("gen fmri max,min,size",gen_fmri.max(),gen_fmri.min(),gen_fmri.size())
         img=img.unsqueeze(0).cpu().permute(0, 2, 3, 1).float().numpy()
         try:
