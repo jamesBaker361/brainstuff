@@ -119,9 +119,11 @@ def main(args):
         for batch in train_loader:
             break
 
+        img=batch["image"]
         print("img min, max",batch["image"].min(),batch["image"].max())
 
-        img=batch["image"]
+        with torch.no_grad():
+            gen_img=voxel_to_pixel()
         try:
             pil_img=Image.fromarray(img) #good as is
 
