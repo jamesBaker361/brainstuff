@@ -85,8 +85,12 @@ def main(args):
         train_fmri=[np.expand_dims(f,0) for f in train_fmri]
         test_fmri=[np.expand_dims(f,0) for f in test_fmri]
 
+        def convert_datatype(x):
+            return x.to(torch_dtype)
+
         transform=torchvision.transforms.Compose([
             torchvision.transforms.Resize((512,512)),
+            convert_datatype,
             torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
         ])
