@@ -113,6 +113,7 @@ for i, idx in enumerate(test_im_idx):
     trial_indices = sorted(sig_test[idx])
     fmri_test[i] = np.mean(fmri_4d[..., trial_indices], axis=-1)
     if i <3:
+        print("stim_test[i].shape",stim_test[i].shape)
         print('fmri_test[i].shape',fmri_test[i].shape)
         print('sorted(sig_test[idx])',sorted(sig_test[idx]))
         print('trial_indices',trial_indices)

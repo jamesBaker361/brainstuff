@@ -135,6 +135,7 @@ for i,idx in enumerate(test_im_idx):
     stim_test[i] = stim[idx]
     fmri_test[i] = fmri[sorted(sig_test[idx])].mean(0)
     if i <3:
+        print("stim_test[i].shape",stim_test[i].shape)
         print('fmri_test[i].shape',fmri_test[i].shape)
         print('sorted(sig_test[idx])',sorted(sig_test[idx]))
         print(f"Test {i+1}/{num_test}: image {idx}")
