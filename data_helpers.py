@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
+from datasets import load_dataset
 
 def pad_to_128(x):
     # Target shape: 128, 128, 128
@@ -22,6 +23,23 @@ def pad_to_128(x):
     # Apply padding
     padded = F.pad(x, (pad_left, pad_right, pad_top, pad_bottom, pad_front, pad_back))
     return padded
+
+class ImageDataset(Dataset):
+    def __init__(self,hf_dataset_path,key,transform=None):
+        super().__init__()
+        data=load_dataset(hf_dataset_path,split="train")
+        self.images=[row[key] for row in data]
+        self.transform=transform
+
+    def __len__(self):
+        return len(self.images)
+    
+    def __getitem__(self, index):
+        img=torch.tensor(self.images[index])
+        if self.transform:
+            img=self.transform
+        return img
+
 
 class BrainImageSubjectDataset(Dataset):
     def __init__(self, fmri_data,image_data,labels,fmri_type,transform=None):
