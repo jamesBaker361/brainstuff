@@ -132,16 +132,14 @@ def main(args):
         for batch in train_loader:
             break
 
-        img=batch["image"]
-        fmri=batch["fmri"]
+        img=batch["image"].to(device,torch_dtype)
+        fmri=batch["fmri"].to(device,torch_dtype)
         print("img min, max",img.min(),img.max())
         print("fmri min,max",fmri.min(),fmri.max())
 
         with torch.no_grad():
-            fmri.to(device,torch_dtype)
             gen_img=voxel_to_pixel(fmri)
             print("gen_img max,min,size",gen_img.max(),gen_img.min(),gen_img.size())
-            img.to(device,torch_dtype)
             gen_fmri=pixel_to_voxel(img)
             print("gen fmri max,min,size",gen_fmri.max(),gen_fmri.min(),gen_fmri.size())
         img=img.unsqueeze(0).cpu().permute(0, 2, 3, 1).float().numpy()
