@@ -410,7 +410,7 @@ def main(args):
             if args.unpaired_image_dataset!="":
                 for name,loss_dict in zip(["unpaired_train"],[unpaired_train_loss_dict]):
                     if args.use_discriminator:
-                        key_list=["fmri_disc_real","fmri_disc_fake","fmri_gen","pixel_disc_real","pixel_disc_fake","pixel_gen"]
+                        key_list=["pixel_disc_real","pixel_disc_fake","pixel_gen"]
                     else:
                         key_list=["ptov_loss","vtop_loss"]
                     for key in key_list:
