@@ -102,7 +102,7 @@ class PixelVoxelArrayModel(nn.Module):
         trans_layers=[]
         for _ in range(n_layers_trans):
             out_channels=out_channels*2
-            trans_layers.append(up_layer(in_channels,out_channels,kernel_size,stride))
+            trans_layers.append(up_layer(in_channels,out_channels,**out_kwargs))
             trans_layers.append(nn.LeakyReLU())
             in_channels=out_channels
 
