@@ -114,31 +114,31 @@ print("Stimuli are loaded.")
 
 num_train, num_test = len(train_im_idx), len(test_im_idx)
 vox_dim, im_dim, im_c = num_voxel, 425, 3
-fmri_array = np.zeros((num_train,vox_dim))
-stim_array = np.zeros((num_train,im_dim,im_dim,im_c))
+fmri_train = np.zeros((num_train,vox_dim))
+stim_train = np.zeros((num_train,im_dim,im_dim,im_c))
 for i,idx in enumerate(train_im_idx):
-    stim_array[i] = stim[idx]
-    fmri_array[i] = fmri[sorted(sig_train[idx])].mean(0)
+    stim_train[i] = stim[idx]
+    fmri_train[i] = fmri[sorted(sig_train[idx])].mean(0)
     print(f"{i}/{len(train_im_idx)}")
 
-np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub),fmri_array )
-np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_stim_sub{}.npy'.format(sub,sub),stim_array )
+#np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub),fmri_train )
+#np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_stim_sub{}.npy'.format(sub,sub),stim_train )
 
 print("Training data is saved.")
 
-fmri_array = np.zeros((num_test,vox_dim))
-stim_array = np.zeros((num_test,im_dim,im_dim,im_c))
+fmri_test = np.zeros((num_test,vox_dim))
+stim_test = np.zeros((num_test,im_dim,im_dim,im_c))
 for i,idx in enumerate(test_im_idx):
-    stim_array[i] = stim[idx]
-    fmri_array[i] = fmri[sorted(sig_test[idx])].mean(0)
+    stim_test[i] = stim[idx]
+    fmri_test[i] = fmri[sorted(sig_test[idx])].mean(0)
     print(f"{i}/{len(test_im_idx)}")
 
-np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub),fmri_array )
-np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_stim_sub{}.npy'.format(sub,sub),stim_array )
+#np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub),fmri_test )
+#np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_stim_sub{}.npy'.format(sub,sub),stim_test )
 
 print("Test data is saved.")
 
-annots_cur = np.load(os.environ["BRAIN_DATA_DIR"]+'/annots/COCO_73k_annots_curated.npy',allow_pickle=True)
+'''annots_cur = np.load(os.environ["BRAIN_DATA_DIR"]+'/annots/COCO_73k_annots_curated.npy',allow_pickle=True)
 
 captions_array = np.empty((num_train,5),dtype=annots_cur.dtype)
 for i,idx in enumerate(train_im_idx):
@@ -152,4 +152,12 @@ for i,idx in enumerate(test_im_idx):
     print(f"{i}/{len(test_im_idx)}")
 np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_cap_sub{}.npy'.format(sub,sub),captions_array )
 
-print("Caption data are saved.")
+print("Caption data are saved.")'''
+save_path = os.environ["BRAIN_DATA_DIR"]+f"/subj{sub:02d}_fmriflattened_stim_paired.npz"
+np.savez_compressed(
+    save_path,
+    fmri_train=fmri_train,
+    stim_train=stim_train,
+    fmri_test=fmri_test,
+    stim_test=stim_test
+)
