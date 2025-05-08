@@ -119,7 +119,7 @@ def main(args):
                                  std=[0.229, 0.224, 0.225])
         ])
 
-        train_dataset=BrainImageSubjectDataset(train_fmri,train_img,train_labels,transform=transform)
+        train_dataset=BrainImageSubjectDataset(train_fmri,train_img,train_labels,args.fmri_type,transform=transform)
         for batch in train_dataset:
             break
 
