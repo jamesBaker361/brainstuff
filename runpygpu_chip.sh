@@ -12,7 +12,7 @@
 
 #SBATCH --gres=gpu:1
 
-#SBATCH --constraint=H100
+#SBATCH --constraint=L40S
 
 #SBATCH --mem=128000                # Real memory (RAM) required (MB)
 
