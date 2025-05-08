@@ -101,7 +101,7 @@ for i in range(37):
     if i <3:
         print(i)
         print('beta_f.shape',beta_f.shape)
-        print('beta_f[mask>0].transpose()',beta_f[mask>0].transpose())
+        print('beta_f[mask>0].transpose()',beta_f[mask>0].transpose().shape)
     del beta_f
     
     
