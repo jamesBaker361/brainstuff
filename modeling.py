@@ -164,7 +164,9 @@ class Discriminator(nn.Module):
         print('zero_tensor.size()',zero_tensor.size())
         zero_output=self.sequential(zero_tensor)
         print('zero output size',zero_output.size())
-        dim=reduce(operator.mul,zero_output.size(),1)
+        dim=1
+        for m in zero_output.size():
+            dim*=m
         in_channels=2**(1+n_layers)
         self.linear=nn.Linear(dim,1)
 
