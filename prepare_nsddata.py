@@ -115,7 +115,7 @@ print("Stimuli are loaded.",stim.shape)
 num_train, num_test = len(train_im_idx), len(test_im_idx)
 vox_dim, im_dim, im_c = num_voxel, 425, 3
 fmri_train = np.zeros((num_train,vox_dim))
-stim_train = np.zeros((num_train,im_dim,im_dim,im_c))
+stim_train = np.zeros((num_train,im_dim,im_dim,im_c),dtype=np.uint8)
 for i,idx in enumerate(train_im_idx):
     stim_train[i] = stim[idx]
     fmri_train[i] = fmri[sorted(sig_train[idx])].mean(0)
@@ -130,7 +130,7 @@ for i,idx in enumerate(train_im_idx):
 print("Training data is saved.")
 
 fmri_test = np.zeros((num_test,vox_dim))
-stim_test = np.zeros((num_test,im_dim,im_dim,im_c))
+stim_test = np.zeros((num_test,im_dim,im_dim,im_c),dtype=np.uint8)
 for i,idx in enumerate(test_im_idx):
     stim_test[i] = stim[idx]
     fmri_test[i] = fmri[sorted(sig_test[idx])].mean(0)
