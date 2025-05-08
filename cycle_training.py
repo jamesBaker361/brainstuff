@@ -136,22 +136,22 @@ def main(args):
         train_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
-        pixel_to_voxel=PixelVoxelArrayModel(image_size,fmri_size,args.n_layers,args.n_layers_trans,"pixel",args.fmri_type,args.kernel_size,2)
-        voxel_to_pixel=PixelVoxelArrayModel(fmri_size,image_size,args.n_layers,args.n_layers_trans,args.fmri_type,"pixel",args.kernel_size,2)
+        pixel_to_fmri=PixelVoxelArrayModel(image_size,fmri_size,args.n_layers,args.n_layers_trans,"pixel",args.fmri_type,args.kernel_size,2)
+        fmri_to_pixel=PixelVoxelArrayModel(fmri_size,image_size,args.n_layers,args.n_layers_trans,args.fmri_type,"pixel",args.kernel_size,2)
 
-        ptov_optimizer=torch.optim.AdamW([p for p in pixel_to_voxel.parameters()])
-        vtop_optimizer=torch.optim.AdamW([p for p in voxel_to_pixel.parameters()])
+        ptof_optimizer=torch.optim.AdamW([p for p in pixel_to_fmri.parameters()])
+        ftop_optimizer=torch.optim.AdamW([p for p in fmri_to_pixel.parameters()])
 
-        pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer=accelerator.prepare(pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer)
+        pixel_to_fmri,fmri_to_pixel,ptof_optimizer,ftop_optimizer=accelerator.prepare(pixel_to_fmri,fmri_to_pixel,ptof_optimizer,ftop_optimizer)
 
         if args.use_discriminator:
             pixel_discriminator=Discriminator(image_size,args.n_layer,"pixel",args.kernel_size)
-            voxel_discriminator=Discriminator(fmri_size,args.n_layers,args.fmri_type,args.kernel_size)
+            fmri_discriminator=Discriminator(fmri_size,args.n_layers,args.fmri_type,args.kernel_size)
 
             pdisc_optimizer=torch.optim.AdamW([p for p in pixel_discriminator.parameters()])
-            vdisc_optimizer=torch.optim.AdamW([p for p in voxel_discriminator.parameters()])
+            fmridisc_optimizer=torch.optim.AdamW([p for p in fmri_discriminator.parameters()])
 
-            pixel_discriminator,voxel_discriminator,pdisc_optimizer,vdisc_optimizer=accelerator.prepare(pixel_discriminator,voxel_discriminator,pdisc_optimizer,vdisc_optimizer)
+            pixel_discriminator,fmri_discriminator,pdisc_optimizer,fmridisc_optimizer=accelerator.prepare(pixel_discriminator,fmri_discriminator,pdisc_optimizer,fmridisc_optimizer)
             bce_loss=torch.nn.BCEWithLogitsLoss()
         for batch in train_loader:
             break
@@ -162,9 +162,9 @@ def main(args):
         print("fmri min,max",fmri.min(),fmri.max())
 
         with torch.no_grad():
-            gen_img=voxel_to_pixel(fmri)
+            gen_img=fmri_to_pixel(fmri)
             print("gen_img max,min,size",gen_img.max(),gen_img.min(),gen_img.size())
-            gen_fmri=pixel_to_voxel(img)
+            gen_fmri=pixel_to_fmri(img)
             print("gen fmri max,min,size",gen_fmri.max(),gen_fmri.min(),gen_fmri.size())
         img=img.unsqueeze(0).cpu().permute(0, 2, 3, 1).float().numpy()
         try:
@@ -221,8 +221,8 @@ def main(args):
 
                     if args.use_discriminator:
                         for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
-                            [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,voxel_discriminator,vdisc_optimizer,"voxel_disc_real","voxel_disc_fake","voxel_gen"],
-                            [pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]):
+                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,fmri_discriminator,fmridisc_optimizer,"voxel_disc_real","voxel_disc_fake","voxel_gen"],
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]):
                             frozen_model.requires_grad_(False)
 
                             #train disc real batch
@@ -266,8 +266,8 @@ def main(args):
                     else:
 
                         for trainable_model,frozen_model,optimizer,data,key in zip([
-                            [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,"vtop_loss"],
-                            [pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,"ptov_loss"]]):
+                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_loss"],
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]):
                             trainable_model.requires_grad_(True)
                             frozen_model.requires_grad_(False)
                             optimizer.zero_grad()
@@ -285,8 +285,8 @@ def main(args):
 
                     if args.use_discriminator:
                         for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
-                            [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,voxel_discriminator,vdisc_optimizer,"voxel_disc_real","voxel_disc_fake","voxel_gen"],
-                            [pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]):
+                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,fmri_discriminator,fmridisc_optimizer,"voxel_disc_real","voxel_disc_fake","voxel_gen"],
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]):
                             frozen_model.requires_grad_(False)
                             trainable_model.requires_grad_(False)
                             disc.requires_grad_(False)
@@ -320,8 +320,8 @@ def main(args):
                     else:
 
                         for trainable_model,frozen_model,optimizer,data,key in zip([
-                            [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,"vtop_loss"],
-                            [pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,"ptov_loss"]]):
+                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_loss"],
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]):
                             trainable_model.requires_grad_(False)
                             frozen_model.requires_grad_(False)
                             translated_data=trainable_model(data)
@@ -347,7 +347,7 @@ def main(args):
                 labels=batch["labels"]
 
                 for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
-                            [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,voxel_discriminator,vdisc_optimizer,"voxel_disc_real","voxel_disc_fake","voxel_gen"],
+                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,fmri_discriminator,fmridisc_optimizer,"voxel_disc_real","voxel_disc_fake","voxel_gen"],
                             #[pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]
                             ]):
                     if args.use_discriminator:
@@ -360,8 +360,8 @@ def main(args):
 
                     else:
                         for trainable_model,frozen_model,optimizer,data,key in zip([
-                            [voxel_to_pixel,pixel_to_voxel,vtop_optimizer,fmri,"vtop_loss"],
-                            [pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,"ptov_loss"]]):
+                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_loss"],
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]):
                             trainable_model.requires_grad_(False)
                             frozen_model.requires_grad_(False)
                             translated_data=trainable_model(data)
