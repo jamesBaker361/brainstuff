@@ -118,8 +118,8 @@ def main(args):
         train_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
-        pixel_to_voxel=PixelVoxelModel(image_size,fmri_size,args.n_layers,args.n_layers_trans,"pixel",args.kernel_size)
-        voxel_to_pixel=PixelVoxelModel(fmri_size,image_size,args.n_layers,args.n_layers_trans,args.fmri_type,args.kernel_size)
+        pixel_to_voxel=PixelVoxelModel(image_size,fmri_size,args.n_layers,args.n_layers_trans,"pixel",args.fmri_type,args.kernel_size,2)
+        voxel_to_pixel=PixelVoxelModel(fmri_size,image_size,args.n_layers,args.n_layers_trans,args.fmri_type,"pixel",args.kernel_size,2)
 
         ptov_optimizer=torch.optim.AdamW([p for p in pixel_to_voxel.parameters()])
         vtop_optimizer=torch.optim.AdamW([p for p in voxel_to_pixel.parameters()])

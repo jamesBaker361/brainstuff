@@ -3,8 +3,13 @@ from torch import nn
 from functools import reduce
 import operator
 
-def compute_input_size(output_size, n_layers, kernel_size=4, stride=2,):
-    factor=kernel_size//stride
+def compute_input_size_1d(output_size, n_layers, factor):
+    dim=output_size[-1]
+    for _ in range(n_layers):
+        dim=dim//factor
+    return (dim)
+
+def compute_input_size_2d(output_size, n_layers, factor):
     dim=output_size[-1]
     for _ in range(n_layers):
         dim=dim//factor
@@ -12,8 +17,7 @@ def compute_input_size(output_size, n_layers, kernel_size=4, stride=2,):
 
 
 def compute_input_size_3d(output_size, n_layers,
-                          kernel_size=4, stride=2):
-    factor=kernel_size//stride
+                          factor):
     dim=output_size[-1]
     for _ in range(n_layers):
         dim=dim//factor
@@ -25,8 +29,10 @@ class PixelVoxelModel(nn.Module):
                  output_dim,
                  n_layers,
                  n_layers_trans:int,
-                  input_modality:str, #one of voxel or pixel
+                  input_modality:str, #one of voxel or pixel or array
+                  output_modality:str, #one of voxel or pixel or array
                   kernel_size:int,
+                  factor:int,
                     *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.input_dim=input_dim
@@ -34,31 +40,44 @@ class PixelVoxelModel(nn.Module):
 
         
 
-        stride=kernel_size//2
+        stride=kernel_size//factor
         layers=[]
         in_channels=input_dim[0]
         size_function={
-            "voxel":compute_input_size,
-            "pixel":compute_input_size_3d
-        }[input_modality]
+            "voxel":compute_input_size_3d,
+            "pixel":compute_input_size_2d,
+            "array":compute_input_size_1d
+        }[output_modality]
         down_layer={
             "voxel":nn.Conv3d,
-            "pixel":nn.Conv2d
+            "pixel":nn.Conv2d,
+            "array":nn.Linear
         }[input_modality]
         batch={
             "voxel":nn.BatchNorm3d,
-            "pixel":nn.BatchNorm2d
+            "pixel":nn.BatchNorm2d,
+            "array":nn.BatchNorm1d
         }[input_modality]
         up_layer={
-            "voxel":nn.ConvTranspose2d,
-            "pixel":nn.ConvTranspose3d
-        }[input_modality]
+            "voxel":nn.ConvTranspose3d,
+            "pixel":nn.ConvTranspose2d,
+            "array":nn.Linear
+        }[output_modality]
 
-        self.intermediate_dim=size_function(output_dim[1:],n_layers_trans,kernel_size,stride)
+        out_kwargs={}
+        if output_modality!="array":
+            out_kwargs={"kernel_size":kernel_size,"stride":stride}
+            self.intermediate_dim=size_function(output_dim[1:],n_layers_trans,factor)
+        else:
+            self.intermediate_dim=size_function(output_dim,n_layers_trans,factor)
+
+        in_kwargs={}
+        if input_modality!="array":
+            in_kwargs={"kernel_size":kernel_size,"stride":stride}
 
         for _ in range(n_layers):
             out_channels=in_channels*2
-            layers.append(down_layer(in_channels,out_channels,kernel_size,stride))
+            layers.append(down_layer(in_channels,out_channels,**in_kwargs))
             layers.append(batch(out_channels))
             layers.append(nn.LeakyReLU())
             in_channels=out_channels
