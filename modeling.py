@@ -96,7 +96,7 @@ class PixelVoxelArrayModel(nn.Module):
         for n in self.intermediate_dim:
             flat_intermediate_dim*=n
         #print(dim,in_channels,reduce(operator.mul, self.intermediate_dim, 1),in_channels*reduce(operator.mul, self.intermediate_dim, 1))
-        print(dim,in_channels,flat_intermediate_dim,in_channels*flat_intermediate_dim)
+        print('dim,in_channels,flat_intermediate_dim,in_channels*flat_intermediate_dim)',dim,in_channels,flat_intermediate_dim,in_channels*flat_intermediate_dim)
         self.linear=nn.Linear(dim,in_channels* flat_intermediate_dim)
 
         trans_layers=[]
