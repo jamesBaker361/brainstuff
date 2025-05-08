@@ -109,7 +109,7 @@ def main(args):
                     raise TypeError("Unsupported image type")
 
                 size = min(h, w)
-                return F.center_crop(img, output_size=[size, size])
+                return torchvision.transforms.center_crop(img, output_size=[size, size])
 
         transform=torchvision.transforms.Compose([
             CenterCropSquare(),
