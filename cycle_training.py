@@ -79,12 +79,12 @@ def main(args):
             subject_test_labels=[subject_class_labels[sub] for _ in range(n_test)]
 
             train_fmri.extend(subject_fmri_train)
-            print(sub,'train_fmri.max(),train_fmri.min()',train_fmri.max(),train_fmri.min())
+            print(sub,'subject_fmri_train.max(),subject_fmri_train.min()',subject_fmri_train.max(),subject_fmri_train.min())
             train_img.extend(subject_stim_train)
             train_labels.extend(subject_train_labels)
 
             test_fmri.extend(subject_fmri_test)
-            print(sub,'test_fmri.max(),test_fmri.min()',test_fmri.max(),test_fmri.min())
+            print(sub,'subject_fmri_test.max(),subject_fmri_test.min()',subject_fmri_test.max(),subject_fmri_test.min())
             test_img.extend(subject_stim_test)
             test_labels.extend(subject_test_labels)
 
