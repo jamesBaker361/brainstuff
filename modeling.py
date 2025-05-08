@@ -23,7 +23,7 @@ def compute_input_size_3d(output_size, n_layers,
         dim=dim//factor
     return dim,dim,dim
 
-class PixelVoxelModel(nn.Module):
+class PixelVoxelArrayModel(nn.Module):
     def __init__(self,
                  input_dim,
                  output_dim,
