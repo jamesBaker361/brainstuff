@@ -64,6 +64,12 @@ class PixelVoxelArrayModel(nn.Module):
             "array":nn.Linear
         }[output_modality]
 
+        if input_modality=="array":
+            down_channels=
+        down_channels=4
+        for _ in range(n_layers):
+            down_dim
+
         self.output_modality=output_modality
         self.input_modality=input_modality
 
