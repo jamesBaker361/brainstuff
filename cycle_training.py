@@ -257,8 +257,8 @@ def main(args):
                             optimizer.step()
             with torch.no_grad():
                 for batch in validation_set:
-                    fmri=batch["fmri"]
-                    images=batch["image"]
+                    fmri=batch["fmri"].to(device,torch_dtype)
+                    images=batch["image"].to(device,torch_dtype)
                     labels=batch["labels"]
 
                     if args.use_discriminator:
@@ -320,8 +320,8 @@ def main(args):
         with torch.no_grad():
             test_loss_dict=init_loss_dict()
             for batch in test_loader:
-                fmri=batch["fmri"]
-                images=batch["image"]
+                fmri=batch["fmri"].to(device,torch_dtype)
+                images=batch["image"].to(device,torch_dtype)
                 labels=batch["labels"]
 
                 for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
