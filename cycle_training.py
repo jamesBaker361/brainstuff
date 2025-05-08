@@ -150,8 +150,8 @@ def main(args):
         pixel_to_fmri,fmri_to_pixel,ptof_optimizer,ftop_optimizer=accelerator.prepare(pixel_to_fmri,fmri_to_pixel,ptof_optimizer,ftop_optimizer)
 
         if args.use_discriminator:
-            pixel_discriminator=Discriminator(image_size,args.n_layer,"pixel",args.kernel_size)
-            fmri_discriminator=Discriminator(fmri_size,args.n_layers,args.fmri_type,args.kernel_size)
+            pixel_discriminator=Discriminator(image_size,args.n_layers_disc,"pixel",args.kernel_size)
+            fmri_discriminator=Discriminator(fmri_size,args.n_layers_disc,args.fmri_type,args.kernel_size)
 
             pdisc_optimizer=torch.optim.AdamW([p for p in pixel_discriminator.parameters()])
             fmridisc_optimizer=torch.optim.AdamW([p for p in fmri_discriminator.parameters()])
