@@ -64,7 +64,7 @@ def main(args):
                 "voxel":""
             }[args.fmri_type]
             path=os.environ["BRAIN_DATA_DIR"]+f"/subj{sub:02d}_fmri{fmri_suffix}_stim_paired.npz"
-            npz_loaded=np.load(path)
+            npz_loaded=np.load(path,allow_pickle=True)
             subject_fmri_train=npz_loaded["fmri_train"]
             subject_stim_train=npz_loaded["stim_train"]
             subject_fmri_test=npz_loaded["fmri_test"]
