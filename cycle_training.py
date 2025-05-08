@@ -28,6 +28,8 @@ parser.add_argument("--epochs",type=int,default=10)
 parser.add_argument("--use_discriminator",action="store_true")
 parser.add_argument("--sublist",nargs="*",type=int)
 parser.add_argument("--fmri_type",type=str,default="voxel",help="array or voxel")
+parser.add_argument("--unpaired_image_dataset",type=str,default="",help="hf path for unpaired images")
+parser.add_argument("--key",type=str,default="image",help="image key if using unpaired images")
 
 def main(args):
     accelerator=Accelerator(log_with="wandb",mixed_precision=args.mixed_precision,gradient_accumulation_steps=args.gradient_accumulation_steps)
