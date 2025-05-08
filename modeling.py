@@ -64,6 +64,9 @@ class PixelVoxelArrayModel(nn.Module):
             "array":nn.Linear
         }[output_modality]
 
+        self.output_modality=output_modality
+        self.input_modality=input_modality
+
         out_kwargs={}
         if output_modality!="array":
             out_kwargs={"kernel_size":kernel_size,"stride":stride}
@@ -75,12 +78,19 @@ class PixelVoxelArrayModel(nn.Module):
         if input_modality!="array":
             in_kwargs={"kernel_size":kernel_size,"stride":stride}
 
-        for _ in range(n_layers):
-            out_channels=in_channels*2
-            layers.append(down_layer(in_channels,out_channels,**in_kwargs))
-            layers.append(batch(out_channels))
-            layers.append(nn.LeakyReLU())
-            in_channels=out_channels
+            for _ in range(n_layers):
+                out_channels=in_channels*2
+                layers.append(down_layer(in_channels,out_channels,**in_kwargs))
+                layers.append(batch(out_channels))
+                layers.append(nn.LeakyReLU())
+                in_channels=out_channels
+        else:
+            for _ in range(n_layers):
+                out_channels=in_channels//2
+                layers.append(down_layer(in_channels,out_channels))
+                layers.append(batch(out_channels))
+                layers.append(nn.LeakyReLU())
+                in_channels=out_channels
         layers.append(nn.Flatten())
         self.sequential=nn.Sequential(*layers)
         zero_tensor=torch.zeros(input_dim).unsqueeze(0)
@@ -97,18 +107,29 @@ class PixelVoxelArrayModel(nn.Module):
             flat_intermediate_dim*=n
         #print(dim,in_channels,reduce(operator.mul, self.intermediate_dim, 1),in_channels*reduce(operator.mul, self.intermediate_dim, 1))
         print('dim,in_channels,flat_intermediate_dim,in_channels*flat_intermediate_dim)',dim,in_channels,flat_intermediate_dim,in_channels*flat_intermediate_dim)
-        self.linear=nn.Linear(dim,in_channels* flat_intermediate_dim)
-
         trans_layers=[]
-        for _ in range(n_layers_trans):
-            out_channels=out_channels*2
-            trans_layers.append(up_layer(in_channels,out_channels,**out_kwargs))
-            trans_layers.append(nn.LeakyReLU())
-            in_channels=out_channels
+        if output_modality!="array":
+            self.linear=nn.Linear(dim,in_channels* flat_intermediate_dim)
+            for _ in range(n_layers_trans):
+                out_channels=in_channels//2
+                trans_layers.append(up_layer(in_channels,out_channels,**out_kwargs))
+                trans_layers.append(nn.LeakyReLU())
+                in_channels=out_channels
 
-        #self.final_conv=conv_trans(in_channels,output_dim[1],1,1)
+            #self.final_conv=conv_trans(in_channels,output_dim[1],1,1)
 
-        trans_layers.append(up_layer(in_channels,output_dim[0],1,1))
+            trans_layers.append(up_layer(in_channels,output_dim[0],1,1))
+        else:
+            in_channels=flat_intermediate_dim
+            self.linear=nn.Linear(dim,in_channels* flat_intermediate_dim)
+            for _ in range(n_layers_trans):
+                out_channels=in_channels*2
+                trans_layers.append(up_layer(in_channels,out_channels))
+                trans_layers.append(nn.LeakyReLU())
+                in_channels=out_channels
+
+        
+        
         self.trans_seqential=nn.Sequential(*trans_layers)
 
         self.layers=nn.ModuleList(layers+[self.linear]+trans_layers)
@@ -120,7 +141,8 @@ class PixelVoxelArrayModel(nn.Module):
         print("self.sequential(x)",x.size())
         x=self.linear(x)
         print("self.linear(x)",x.size())
-        x=x.reshape((batch_size,-1, *self.intermediate_dim))
+        if self.output_modality!="array":
+            x=x.reshape((batch_size,-1, *self.intermediate_dim))
         print("x.reshape((batch_size,-1, *self.intermediate_dim))",x.size())
         x=self.trans_seqential(x)
         print("self.trans_seqential(x)",x.size())
