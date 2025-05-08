@@ -70,7 +70,7 @@ def main(args):
             subject_fmri_train=npz_loaded["fmri_train"]
             subject_stim_train=npz_loaded["stim_train"]
             subject_fmri_test=npz_loaded["fmri_test"]
-            subject_stim_test=npz_loaded["fmri_test"]
+            subject_stim_test=npz_loaded["stim_test"]
 
             n_test=len(subject_fmri_test)
             n_train=len(subject_fmri_train)
@@ -89,13 +89,7 @@ def main(args):
             test_labels.extend(subject_test_labels)
 
         train_img=[np.transpose(i, (2,0,1)) for i in train_img]
-        new_test_img=[]
-        for i,img in enumerate(test_img):
-            try:
-                new_test_img.append(np.transpose(i, (2,0,1)))
-            except Exception as e:
-                print(e)
-                print(f" problem with {i} shape =",img.shape)
+        test_img=[np.transpose(i, (2,0,1)) for i in test_img]
 
         if args.fmri_type=="voxel":
             train_fmri=[np.expand_dims(f,0) for f in train_fmri]
