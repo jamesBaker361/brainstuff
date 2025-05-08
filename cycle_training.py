@@ -131,7 +131,7 @@ def main(args):
 
         
 
-        test_dataset=BrainImageSubjectDataset(test_fmri,test_img,test_labels,transform=transform)
+        test_dataset=BrainImageSubjectDataset(test_fmri,test_img,test_labels,args.fmri_type,transform=transform)
 
         train_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
