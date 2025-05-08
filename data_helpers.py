@@ -24,22 +24,21 @@ def pad_to_128(x):
     return padded
 
 class BrainImageSubjectDataset(Dataset):
-    def __init__(self, fmri_data,image_data,labels,transform=None):
+    def __init__(self, fmri_data,image_data,labels,fmri_type,transform=None):
         super().__init__()
         self.fmri_data=fmri_data
         self.image_data=image_data
         self.labels=labels
         self.transform=transform
+        self.fmri_type=fmri_type
 
     def __len__(self):
         return len(self.fmri_data)
     
-    def get_shapes(self):
-        return self.fmri_data[0].shape,self.image_data[0].shape, self.labels[0].sha[e]
-    
     def __getitem__(self, idx):
         fmri = torch.tensor(self.fmri_data[idx])
-        fmri=pad_to_128(fmri)
+        if self.fmri_type=="voxel":
+            fmri=pad_to_128(fmri)
         image = torch.tensor(self.image_data[idx])
         label = torch.tensor(self.labels[idx])
 
