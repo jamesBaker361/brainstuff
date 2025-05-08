@@ -97,8 +97,22 @@ def main(args):
 
         def convert_datatype(x):
             return x.to(torch_dtype)
+        
+        class CenterCropSquare:
+            def __call__(self, img):
+                # img can be PIL Image or Tensor [C, H, W]
+                if isinstance(img, Image.Image):
+                    w, h = img.size
+                elif torch.is_tensor(img):
+                    h, w = img.shape[-2:]
+                else:
+                    raise TypeError("Unsupported image type")
+
+                size = min(h, w)
+                return F.center_crop(img, output_size=[size, size])
 
         transform=torchvision.transforms.Compose([
+            CenterCropSquare(),
             torchvision.transforms.Resize((512,512)),
             convert_datatype,
             torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
