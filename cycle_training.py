@@ -193,8 +193,8 @@ def main(args):
                         validation_set.append(batch)
                         continue
 
-                    fmri=batch["fmri"]
-                    images=batch["image"]
+                    fmri=batch["fmri"].to(device,torch_dtype)
+                    images=batch["image"].to(device,torch_dtype)
                     labels=batch["labels"]
 
                     if args.use_discriminator:
