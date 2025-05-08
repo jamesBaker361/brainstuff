@@ -27,6 +27,7 @@ parser.add_argument("--n_layers_disc",type=int,default=4)
 parser.add_argument("--epochs",type=int,default=10)
 parser.add_argument("--use_discriminator",action="store_true")
 parser.add_argument("--sublist",nargs="*",type=int)
+parser.add_argument("--fmri_type",type=str,default="voxel",help="array or voxel")
 
 def main(args):
     accelerator=Accelerator(log_with="wandb",mixed_precision=args.mixed_precision,gradient_accumulation_steps=args.gradient_accumulation_steps)
@@ -58,7 +59,11 @@ def main(args):
         else:
             sublist=args.sublist
         for sub in sublist:
-            path=os.environ["BRAIN_DATA_DIR"]+f"/subj{sub:02d}_fmri_stim_paired.npz"
+            fmri_suffix={
+                "array":"flattened",
+                "voxel":""
+            }[args.fmri_type]
+            path=os.environ["BRAIN_DATA_DIR"]+f"/subj{sub:02d}_fmri{fmri_suffix}_stim_paired.npz"
             npz_loaded=np.load(path)
             subject_fmri_train=npz_loaded["fmri_train"]
             subject_stim_train=npz_loaded["stim_train"]
@@ -82,8 +87,9 @@ def main(args):
         train_img=[np.transpose(i, (2,0,1)) for i in train_img]
         test_img=[np.transpose(i, (2,0,1)) for i in test_img]
 
-        train_fmri=[np.expand_dims(f,0) for f in train_fmri]
-        test_fmri=[np.expand_dims(f,0) for f in test_fmri]
+        if args.fmri_type=="voxel":
+            train_fmri=[np.expand_dims(f,0) for f in train_fmri]
+            test_fmri=[np.expand_dims(f,0) for f in test_fmri]
 
         def convert_datatype(x):
             return x.to(torch_dtype)
@@ -113,7 +119,7 @@ def main(args):
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
         pixel_to_voxel=PixelVoxelModel(image_size,fmri_size,args.n_layers,args.n_layers_trans,"pixel",args.kernel_size)
-        voxel_to_pixel=PixelVoxelModel(fmri_size,image_size,args.n_layers,args.n_layers_trans,"voxel",args.kernel_size)
+        voxel_to_pixel=PixelVoxelModel(fmri_size,image_size,args.n_layers,args.n_layers_trans,args.fmri_type,args.kernel_size)
 
         ptov_optimizer=torch.optim.AdamW([p for p in pixel_to_voxel.parameters()])
         vtop_optimizer=torch.optim.AdamW([p for p in voxel_to_pixel.parameters()])
@@ -122,7 +128,7 @@ def main(args):
 
         if args.use_discriminator:
             pixel_discriminator=Discriminator(image_size,args.n_layer,"pixel",args.kernel_size)
-            voxel_discriminator=Discriminator(fmri_size,args.n_layers,"voxel",args.kernel_size)
+            voxel_discriminator=Discriminator(fmri_size,args.n_layers,args.fmri_type,args.kernel_size)
 
             pdisc_optimizer=torch.optim.AdamW([p for p in pixel_discriminator.parameters()])
             vdisc_optimizer=torch.optim.AdamW([p for p in voxel_discriminator.parameters()])
