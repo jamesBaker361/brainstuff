@@ -76,14 +76,10 @@ num_trials = 37*750
 for idx in range(num_trials):
     ''' nsdId as in design csv files'''
     nsdId = stim_order['subjectim'][sub-1, stim_order['masterordering'][idx] - 1] - 1
-    if stim_order['masterordering'][idx]>1000:
-        if nsdId not in sig_train:
-            sig_train[nsdId] = []
-        sig_train[nsdId].append(idx)
+    if stim_order['masterordering'][idx] > 1000:
+        sig_train.setdefault(nsdId, []).append(idx)
     else:
-        if nsdId not in sig_test:
-            sig_test[nsdId] = []
-        sig_test[nsdId].append(idx)
+        sig_test.setdefault(nsdId, []).append(idx)
 
 
 train_im_idx = list(sig_train.keys())
@@ -102,15 +98,19 @@ for i in range(37):
     beta_filename = "betas_session{0:02d}.nii.gz".format(i+1)
     beta_f = nib.load(betas_dir+beta_filename).get_fdata().astype(np.float32)
     fmri[i*750:(i+1)*750] = beta_f[mask>0].transpose()
+    if i <3:
+        print(i)
+        print('beta_f.shape',beta_f.shape)
+        print('beta_f[mask>0].transpose()',beta_f[mask>0].transpose())
     del beta_f
-    print(i)
+    
     
 print("fMRI Data are loaded.")
 
 f_stim = h5py.File(os.environ["BRAIN_DATA_DIR"]+'/nsddata_stimuli/stimuli/nsd/nsd_stimuli.hdf5', 'r')
 stim = f_stim['imgBrick'][:]
 
-print("Stimuli are loaded.")
+print("Stimuli are loaded.",stim.shape)
 
 num_train, num_test = len(train_im_idx), len(test_im_idx)
 vox_dim, im_dim, im_c = num_voxel, 425, 3
@@ -119,7 +119,10 @@ stim_train = np.zeros((num_train,im_dim,im_dim,im_c))
 for i,idx in enumerate(train_im_idx):
     stim_train[i] = stim[idx]
     fmri_train[i] = fmri[sorted(sig_train[idx])].mean(0)
-    print(f"{i}/{len(train_im_idx)}")
+    if i <3:
+        print(f"{i}/{len(train_im_idx)}")
+        print('fmri_train[i].shape',fmri_train[i].shape)
+        print('sorted(sig_train[idx])',sorted(sig_train[idx]))
 
 #np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub),fmri_train )
 #np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_stim_sub{}.npy'.format(sub,sub),stim_train )
@@ -131,12 +134,18 @@ stim_test = np.zeros((num_test,im_dim,im_dim,im_c))
 for i,idx in enumerate(test_im_idx):
     stim_test[i] = stim[idx]
     fmri_test[i] = fmri[sorted(sig_test[idx])].mean(0)
-    print(f"{i}/{len(test_im_idx)}")
+    if i <3:
+        print('fmri_test[i].shape',fmri_test[i].shape)
+        print('sorted(sig_test[idx])',sorted(sig_test[idx]))
+        print(f"Test {i+1}/{num_test}: image {idx}")
 
 #np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub),fmri_test )
 #np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_stim_sub{}.npy'.format(sub,sub),stim_test )
 
 print("Test data is saved.")
+print("All done. Shapes:")
+print("fmri_train:", fmri_train.shape)
+print("stim_train:", stim_train.shape)
 
 '''annots_cur = np.load(os.environ["BRAIN_DATA_DIR"]+'/annots/COCO_73k_annots_curated.npy',allow_pickle=True)
 
