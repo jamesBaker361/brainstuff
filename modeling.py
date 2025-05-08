@@ -53,10 +53,10 @@ class PixelVoxelArrayModel(nn.Module):
             "pixel":nn.Conv2d,
             "array":nn.Linear
         }[input_modality]
-        batch={
+        norm={
             "voxel":nn.BatchNorm3d,
             "pixel":nn.BatchNorm2d,
-            "array":nn.BatchNorm1d
+            "array":nn.LayerNorm
         }[input_modality]
         up_layer={
             "voxel":nn.ConvTranspose3d,
@@ -81,14 +81,14 @@ class PixelVoxelArrayModel(nn.Module):
             for _ in range(n_layers):
                 out_channels=in_channels*2
                 layers.append(down_layer(in_channels,out_channels,**in_kwargs))
-                layers.append(batch(out_channels))
+                layers.append(norm(out_channels))
                 layers.append(nn.LeakyReLU())
                 in_channels=out_channels
         else:
             for _ in range(n_layers):
                 out_channels=in_channels//2
                 layers.append(down_layer(in_channels,out_channels))
-                layers.append(batch(out_channels))
+                layers.append(norm(out_channels))
                 layers.append(nn.LeakyReLU())
                 in_channels=out_channels
         layers.append(nn.Flatten())
