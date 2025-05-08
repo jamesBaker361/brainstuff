@@ -130,7 +130,7 @@ class Discriminator(nn.Module):
     def __init__(self,
                  input_dim,
                  n_layers,
-                  input_modality:str, #one of voxel or pixel
+                  input_modality:str, #one of voxel or pixel or array
                   kernel_size:int,
                     *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -143,11 +143,13 @@ class Discriminator(nn.Module):
         in_channels=input_dim[0]
         conv={
             "voxel":nn.Conv3d,
-            "pixel":nn.Conv2d
+            "pixel":nn.Conv2d,
+            "array":nn.Linear
         }[input_modality]
         batch={
             "voxel":nn.BatchNorm3d,
-            "pixel":nn.BatchNorm2d
+            "pixel":nn.BatchNorm2d,
+            "array":nn.BatchNorm1d
         }[input_modality]
 
         for _ in range(n_layers):
