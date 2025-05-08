@@ -89,7 +89,13 @@ def main(args):
             test_labels.extend(subject_test_labels)
 
         train_img=[np.transpose(i, (2,0,1)) for i in train_img]
-        test_img=[np.transpose(i, (2,0,1)) for i in test_img]
+        new_test_img=[]
+        for i,img in enumerate(test_img):
+            try:
+                new_test_img.append(np.transpose(i, (2,0,1)))
+            except Exception as e:
+                print(e)
+                print(f" problem with {i} shape =",img.shape)
 
         if args.fmri_type=="voxel":
             train_fmri=[np.expand_dims(f,0) for f in train_fmri]
