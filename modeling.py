@@ -7,7 +7,7 @@ def compute_input_size_1d(output_size, n_layers, factor):
     dim=output_size[-1]
     for _ in range(n_layers):
         dim=dim//factor
-    return (dim)
+    return [dim]
 
 def compute_input_size_2d(output_size, n_layers, factor):
     dim=output_size[-1]
