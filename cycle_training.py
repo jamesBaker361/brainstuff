@@ -15,7 +15,7 @@ from PIL import Image
 import torchvision
 
 parser=argparse.ArgumentParser()
-parser.add_argument("--mixed_precision",type=str,default="no")
+parser.add_argument("--mixed_precision",type=str,default="fp16")
 parser.add_argument("--project_name",type=str,default="person")
 parser.add_argument("--gradient_accumulation_steps",type=int,default=4)
 parser.add_argument("--batch_size",type=int,default=4)
@@ -118,7 +118,7 @@ def main(args):
         ptov_optimizer=torch.optim.AdamW([p for p in pixel_to_voxel.parameters()])
         vtop_optimizer=torch.optim.AdamW([p for p in voxel_to_pixel.parameters()])
 
-        train_loader, pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer=accelerator.prepare(train_loader, pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer)
+        pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer=accelerator.prepare(pixel_to_voxel,voxel_to_pixel,ptov_optimizer,vtop_optimizer)
 
         if args.use_discriminator:
             pixel_discriminator=Discriminator(image_size,args.n_layer,"pixel",args.kernel_size)
@@ -138,8 +138,10 @@ def main(args):
         print("fmri min,max",fmri.min(),fmri.max())
 
         with torch.no_grad():
+            fmri.to(device)
             gen_img=voxel_to_pixel(fmri)
             print("gen_img max,min,size",gen_img.max(),gen_img.min(),gen_img.size())
+            img.to(device)
             gen_fmri=pixel_to_voxel(img)
             print("gen fmri max,min,size",gen_fmri.max(),gen_fmri.min(),gen_fmri.size())
         img=img.unsqueeze(0).cpu().permute(0, 2, 3, 1).float().numpy()
