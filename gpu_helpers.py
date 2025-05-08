@@ -1,5 +1,6 @@
 import torch
 import gc
+import os
 
 def print_details():
     for slurm_var in ["SLURMD_NODENAME","SBATCH_CLUSTERS", 
