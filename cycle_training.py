@@ -1,4 +1,5 @@
 import torch
+import torchvision.transforms.functional
 from gpu_helpers import *
 from accelerate import Accelerator
 import argparse
@@ -109,7 +110,7 @@ def main(args):
                     raise TypeError("Unsupported image type")
 
                 size = min(h, w)
-                return torchvision.transforms.center_crop(img, output_size=[size, size])
+                return torchvision.transforms.functional.center_crop(img, output_size=[size, size])
 
         transform=torchvision.transforms.Compose([
             CenterCropSquare(),
