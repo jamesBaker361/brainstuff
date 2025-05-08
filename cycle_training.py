@@ -138,10 +138,10 @@ def main(args):
         print("fmri min,max",fmri.min(),fmri.max())
 
         with torch.no_grad():
-            fmri.to(device)
+            fmri.to(device,torch_dtype)
             gen_img=voxel_to_pixel(fmri)
             print("gen_img max,min,size",gen_img.max(),gen_img.min(),gen_img.size())
-            img.to(device)
+            img.to(device,torch_dtype)
             gen_fmri=pixel_to_voxel(img)
             print("gen fmri max,min,size",gen_fmri.max(),gen_fmri.min(),gen_fmri.size())
         img=img.unsqueeze(0).cpu().permute(0, 2, 3, 1).float().numpy()
