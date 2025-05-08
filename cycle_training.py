@@ -6,7 +6,7 @@ import time
 import numpy as np
 import os
 from torch.utils.data import DataLoader
-from data_helpers import BrainImageSubjectDataset
+from data_helpers import BrainImageSubjectDataset,UnpairedImageDataset
 from modeling import PixelVoxelArrayModel,Discriminator
 import random
 import torch.nn.functional as F
@@ -132,6 +132,10 @@ def main(args):
         
 
         test_dataset=BrainImageSubjectDataset(test_fmri,test_img,test_labels,args.fmri_type,transform=transform)
+
+        if args.unpaired_image_dataset!="":
+            unpaired_dataset=UnpairedImageDataset(args.unpaired_image_dataset,args.key,transform=transform)
+            unpaired_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
 
         train_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)

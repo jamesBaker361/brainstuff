@@ -24,7 +24,7 @@ def pad_to_128(x):
     padded = F.pad(x, (pad_left, pad_right, pad_top, pad_bottom, pad_front, pad_back))
     return padded
 
-class ImageDataset(Dataset):
+class UnpairedImageDataset(Dataset):
     def __init__(self,hf_dataset_path,key,transform=None):
         super().__init__()
         data=load_dataset(hf_dataset_path,split="train")
