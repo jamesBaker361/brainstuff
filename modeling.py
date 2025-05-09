@@ -102,7 +102,7 @@ class PixelVoxelArrayModel(nn.Module):
             else:
                 in_channels=out_channels*2
                 up_layer_list.append(up_layer(in_channels,out_channels,factor,factor))
-                shape=(in_channels, *[d*2 for d in shape[1:]])
+                shape=(in_channels, *[d//2 for d in shape[1:]])
             print("up layer shape",shape)
         initial_up_shape=1
         for n in shape:
