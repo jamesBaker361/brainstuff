@@ -177,7 +177,7 @@ def main(args):
         img=img[0].unsqueeze(0).cpu().permute(0, 2, 3, 1).float().numpy()
         print("img.shape",img.shape)
         try:
-            pil_img=Image.fromarray(img) #good as is
+            pil_img=Image.fromarray(img.round().astype("uint8")) #good as is
             pil_img.save("img.png")
             accelerator.log({
                 "pil_img":wandb.Image(pil_img),
@@ -187,7 +187,7 @@ def main(args):
             print(e)
 
         try:
-            pil_rescaled_img=Image.fromarray(img*255) #assuming its [0,1]
+            pil_rescaled_img=Image.fromarray((img*255).round().astype("uint8")) #assuming its [0,1]
             pil_rescaled_img.save("img_rescaled.png")
             accelerator.log({
                 "pil_rescaled_img":wandb.Image(pil_rescaled_img)
@@ -198,7 +198,7 @@ def main(args):
 
         
         try:
-            pil_rescaled_shifted_img=Image.fromarray(img*255 +128) #assuming its [-1,1]
+            pil_rescaled_shifted_img=Image.fromarray((img*255 +128).round().astype("uint8")) #assuming its [-1,1]
             pil_rescaled_img.save("img_rescaled_shifted.png")
             accelerator.log({
                 "pil_rescaled_shifted_img":wandb.Image(pil_rescaled_shifted_img)
