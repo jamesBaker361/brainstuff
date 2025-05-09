@@ -116,12 +116,15 @@ def main(args):
                 size = min(h, w)
                 return torchvision.transforms.functional.center_crop(img, output_size=[size, size])
 
+        def normalize(x):
+            #assuming x is between 0-255
+            return x/255
+
         transform=torchvision.transforms.Compose([
             CenterCropSquare(),
             torchvision.transforms.Resize((512,512)),
             convert_datatype,
-            torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
+            normalize
         ])
 
         train_dataset=BrainImageSubjectDataset(train_fmri,train_img,train_labels,args.fmri_type,transform=transform)
