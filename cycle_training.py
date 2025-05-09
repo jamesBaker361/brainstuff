@@ -239,9 +239,9 @@ def main(args):
                     #labels=batch["labels"]
 
                     if args.use_discriminator:
-                        for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
+                        for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in [
                             [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,fmri_discriminator,fmridisc_optimizer,"fmri_disc_real","fmri_disc_fake","fmri_gen"],
-                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]):
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]:
                             frozen_model.requires_grad_(False)
 
                             #train disc real batch
@@ -284,9 +284,9 @@ def main(args):
 
                     else:
 
-                        for trainable_model,frozen_model,optimizer,data,key in zip([
+                        for trainable_model,frozen_model,optimizer,data,key in [
                             [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_loss"],
-                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]):
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]:
                             trainable_model.requires_grad_(True)
                             frozen_model.requires_grad_(False)
                             optimizer.zero_grad()
@@ -305,9 +305,9 @@ def main(args):
                         images=images.to(device,torch_dtype)
 
                         if args.use_discriminator:
-                            for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
+                            for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in [
                                 #[fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,fmri_discriminator,fmridisc_optimizer,"fmri_disc_real","fmri_disc_fake","fmri_gen"],
-                                [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]):
+                                [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]:
                                 frozen_model.requires_grad_(False)
 
                                 #train disc real batch
@@ -370,9 +370,9 @@ def main(args):
                     #labels=batch["labels"]
 
                     if args.use_discriminator:
-                        for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
+                        for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in [
                             [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,fmri_discriminator,fmridisc_optimizer,"fmri_disc_real","fmri_disc_fake","fmri_gen"],
-                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]):
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]:
                             frozen_model.requires_grad_(False)
                             trainable_model.requires_grad_(False)
                             disc.requires_grad_(False)
@@ -405,9 +405,9 @@ def main(args):
                             val_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
                     else:
 
-                        for trainable_model,frozen_model,optimizer,data,key in zip([
+                        for trainable_model,frozen_model,optimizer,data,key in [
                             [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_loss"],
-                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]):
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]:
                             trainable_model.requires_grad_(False)
                             frozen_model.requires_grad_(False)
                             translated_data=trainable_model(data)
@@ -443,10 +443,10 @@ def main(args):
                 images=batch["image"].to(device,torch_dtype)
                 #labels=batch["labels"]
 
-                for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
+                for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in [
                             [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,fmri_discriminator,fmridisc_optimizer,"fmri_disc_real","fmri_disc_fake","fmri_gen"],
                             #[pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]
-                            ]):
+                            ]:
                     if args.use_discriminator:
                         true_labels=torch.ones((args.batch_size))
                         translated_data=trainable_model(data)
@@ -456,9 +456,9 @@ def main(args):
                         test_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
 
                     else:
-                        for trainable_model,frozen_model,optimizer,data,key in zip([
+                        for trainable_model,frozen_model,optimizer,data,key in [
                             [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_loss"],
-                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]):
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]:
                             trainable_model.requires_grad_(False)
                             frozen_model.requires_grad_(False)
                             translated_data=trainable_model(data)
