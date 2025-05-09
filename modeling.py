@@ -65,6 +65,7 @@ class PixelVoxelArrayModel(nn.Module):
         }[output_modality]
         down_layer_list=[]
         shape=input_dim
+        zero_input=torch.zeros(input_dim).unsqueeze(0)
         if input_modality=="voxel" or input_modality=="pixel":
             down_layer_list.append(down_layer(shape[0],4,1,1))
             
@@ -85,6 +86,11 @@ class PixelVoxelArrayModel(nn.Module):
             down_layer_list.append(norm(out_channels))
             print("down layer shape ",shape)
         
+        for layer in down_layer_list:
+            zero_input=layer(zero_input)
+
+        print("down layers zero input",zero_input.size())
+
         final_down_shape=1
         for n in shape:
             final_down_shape*=n
@@ -118,6 +124,16 @@ class PixelVoxelArrayModel(nn.Module):
             up_layer_list.append(down_layer(shape[0],target_shape[0],1,1))
 
         intermediate_layers.append(nn.Linear(final_down_shape,initial_up_shape))
+
+        for layer in intermediate_layers:
+            zero_input=layer(zero_input)
+
+        print("intermediate zero input",zero_input.size())
+
+        for layer in up_layer_list:
+            zero_input=layer(zero_input)
+
+        print("down layers zero input",zero_input.size())
 
         self.module_list=nn.ModuleList(down_layer_list+intermediate_layers+up_layer_list)
 
