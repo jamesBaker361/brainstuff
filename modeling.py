@@ -63,95 +63,66 @@ class PixelVoxelArrayModel(nn.Module):
             "pixel":nn.ConvTranspose2d,
             "array":nn.Linear
         }[output_modality]
-
-        if input_modality=="array":
-            down_channels=
-        down_channels=4
+        down_layer_list=[]
+        shape=input_dim
+        if input_modality=="voxel" or input_modality=="pixel":
+            down_layer_list.append(down_layer(shape[0],4,1,1))
+            
+            shape=(4, *shape[1:])
+        target_shape=shape
         for _ in range(n_layers):
-            down_dim
-
-        self.output_modality=output_modality
-        self.input_modality=input_modality
-
-        out_kwargs={}
-        if output_modality!="array":
-            out_kwargs={"kernel_size":kernel_size,"stride":stride}
-            self.intermediate_dim=size_function(output_dim[1:],n_layers_trans,factor)
-        else:
-            self.intermediate_dim=size_function(output_dim,n_layers_trans,factor)
-
-        in_kwargs={}
-        if input_modality!="array":
-            in_kwargs={"kernel_size":kernel_size,"stride":stride}
-
-            for _ in range(n_layers):
-                out_channels=in_channels*2
-                layers.append(down_layer(in_channels,out_channels,**in_kwargs))
-                layers.append(norm(out_channels))
-                layers.append(nn.LeakyReLU())
-                in_channels=out_channels
-        else:
-            for _ in range(n_layers):
+            in_channels=shape[0]
+            if input_modality=="array":
                 out_channels=in_channels//2
-                layers.append(down_layer(in_channels,out_channels))
-                layers.append(norm(out_channels))
-                layers.append(nn.LeakyReLU())
-                in_channels=out_channels
-        layers.append(nn.Flatten())
-        self.sequential=nn.Sequential(*layers)
-        zero_tensor=torch.zeros(input_dim).unsqueeze(0)
-        print('zero_tensor.size()',zero_tensor.size())
-        zero_output=self.sequential(zero_tensor)
-        print('zero output size',zero_output.size())
-        dim=1
-        for m in zero_output.size():
-            dim*=m
-        in_channels=pow(2,1+n_layers_trans)
-        print('self.intermediate_dim',self.intermediate_dim)
-        flat_intermediate_dim=1
-        for n in self.intermediate_dim:
-            flat_intermediate_dim*=n
-        #print(dim,in_channels,reduce(operator.mul, self.intermediate_dim, 1),in_channels*reduce(operator.mul, self.intermediate_dim, 1))
-        print('dim,in_channels,flat_intermediate_dim,in_channels*flat_intermediate_dim)',dim,in_channels,flat_intermediate_dim,in_channels*flat_intermediate_dim)
-        trans_layers=[]
-        if output_modality!="array":
-            self.linear=nn.Linear(dim,in_channels* flat_intermediate_dim)
-            for _ in range(n_layers_trans):
-                out_channels=in_channels//2
-                trans_layers.append(up_layer(in_channels,out_channels,**out_kwargs))
-                trans_layers.append(nn.LeakyReLU())
-                in_channels=out_channels
-
-            #self.final_conv=conv_trans(in_channels,output_dim[1],1,1)
-
-            trans_layers.append(up_layer(in_channels,output_dim[0],1,1))
-        else:
-            in_channels=flat_intermediate_dim
-            self.linear=nn.Linear(dim,in_channels* flat_intermediate_dim)
-            for _ in range(n_layers_trans):
+                down_layer_list.append(down_layer(in_channels,out_channels))
+                shape=[out_channels]
+            else:
                 out_channels=in_channels*2
-                trans_layers.append(up_layer(in_channels,out_channels))
-                trans_layers.append(nn.LeakyReLU())
-                in_channels=out_channels
+                down_layer_list.append(down_layer(in_channels,out_channels,kernel_size,stride))
+                shape=(out_channels, *[d//2 for d in shape[1:]])
+            down_layer_list.append(nn.LeakyReLU())
+            down_layer_list.append(norm(out_channels))
+            print("down layer shape ",shape)
+        
+        final_down_shape=1
+        for n in shape:
+            final_down_shape*=n
 
-        
-        
-        self.trans_seqential=nn.Sequential(*trans_layers)
+        print('final_down_shape',final_down_shape)
+        up_layer_list=[]
+        shape=target_shape
+        for _ in range(n_layers_trans):
+            out_channels=shape[0]
+            up_layer_list.append(norm(out_channels))
+            up_layer_list.append(nn.LeakyReLU())
+            if input_modality=="array":
+                in_channels=out_channels//2
+                up_layer_list.append(up_layer(in_channels,out_channels))
+                shape=[in_channels]
+            else:
+                in_channels=out_channels*2
+                up_layer_list.append(up_layer(in_channels,out_channels,factor,factor))
+                shape=(in_channels, *[d*2 for d in shape[1:]])
+            print("up layer shape",shape)
+        initial_up_shape=1
+        for n in shape:
+            initial_up_shape*=n
+        up_layer_list=up_layer_list[::-1]
+        print('initial_up_shape',initial_up_shape)
 
-        self.layers=nn.ModuleList(layers+[self.linear]+trans_layers)
-        
+        intermediate_layers=[]
+        if input_modality=="voxel" or input_modality=="pixel":
+            intermediate_layers.append(nn.Flatten())
+            up_layer_list.append(down_layer(shape[0],target_shape[0],1,1))
+
+        intermediate_layers.append(nn.Linear(final_down_shape,initial_up_shape))
+
+        self.module_list=nn.ModuleList(down_layer_list+intermediate_layers+up_layer_list)
+
 
     def forward(self,x):
-        batch_size=x.size()[0]
-        x= self.sequential(x)
-        print("self.sequential(x)",x.size())
-        x=self.linear(x)
-        print("self.linear(x)",x.size())
-        if self.output_modality!="array":
-            x=x.reshape((batch_size,-1, *self.intermediate_dim))
-        print("x.reshape((batch_size,-1, *self.intermediate_dim))",x.size())
-        x=self.trans_seqential(x)
-        print("self.trans_seqential(x)",x.size())
+        for layer in self.module_list:
+            x=layer(x)
         return x
 
 class Discriminator(nn.Module):
