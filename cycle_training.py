@@ -31,6 +31,8 @@ parser.add_argument("--sublist",nargs="*",type=int)
 parser.add_argument("--fmri_type",type=str,default="voxel",help="array or voxel")
 parser.add_argument("--unpaired_image_dataset",type=str,default="",help="hf path for unpaired images")
 parser.add_argument("--key",type=str,default="image",help="image key if using unpaired images")
+parser.add_argument("--train_limit",type=int,default=-1,help="limit # of training batches")
+parser.add_argument("--test_limit",type=int,default="limit # of testing batches")
 
 def main(args):
     accelerator=Accelerator(log_with="wandb",mixed_precision=args.mixed_precision,gradient_accumulation_steps=args.gradient_accumulation_steps)
@@ -215,7 +217,9 @@ def main(args):
             train_loss_dict=init_loss_dict()
             unpaired_train_loss_dict=init_loss_dict()
             val_loss_dict=init_loss_dict()
-            for batch in train_loader:
+            for k,batch in enumerate(train_loader):
+                if k==args.train_limit:
+                    break
                 with accelerator.accumulate():
                     if random.random() < args.val_split:
                         validation_set.append(batch)
@@ -285,7 +289,9 @@ def main(args):
                             optimizer.step()
             #unpaired training
             if args.unpaired_image_dataset!="":
-                for image in unpaired_loader:
+                for k,images in enumerate(unpaired_loader):
+                    if k==args.train_limit:
+                        break
                     with accelerator.accumulate():
                         images=images.to(device,torch_dtype)
 
@@ -421,7 +427,9 @@ def main(args):
         reconstructed_image_list=[]
         with torch.no_grad():
             test_loss_dict=init_loss_dict()
-            for batch in test_loader:
+            for k,batch in enumerate(test_loader):
+                if k==args.test_limit:
+                    break
                 fmri=batch["fmri"].to(device,torch_dtype)
                 images=batch["image"].to(device,torch_dtype)
                 labels=batch["labels"]
