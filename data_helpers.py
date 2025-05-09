@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 from datasets import load_dataset
+import numpy as np
 
 def pad_to_128(x):
     # Target shape: 128, 128, 128
@@ -28,7 +29,7 @@ class UnpairedImageDataset(Dataset):
     def __init__(self,hf_dataset_path,key,transform=None):
         super().__init__()
         data=load_dataset(hf_dataset_path,split="train")
-        self.images=[row[key] for row in data]
+        self.images=[np.array(row[key]).astype(np.float32)  for row in data]
         self.transform=transform
 
     def __len__(self):
