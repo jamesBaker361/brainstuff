@@ -249,7 +249,7 @@ def main(args):
                             trainable_model.requires_grad_(False)
                             disc_optimizer.zero_grad()
 
-                            true_labels=torch.ones((args.batch_size))
+                            true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
                             '''translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)'''
                             predicted_labels=disc(input_data).squeeze(1)
@@ -259,7 +259,7 @@ def main(args):
 
 
                             #train disc fake batch
-                            fake_labels=torch.zeros((args.batch_size))
+                            fake_labels=torch.zeros((args.batch_size)).to(device,torch_dtype)
                             translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data).squeeze(1)
@@ -273,7 +273,7 @@ def main(args):
                             gen_optimizer.zero_grad()
                             disc.requires_grad_(False)
                             trainable_model.requires_grad_(True)
-                            true_labels=torch.ones((args.batch_size))
+                            true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
                             translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data).squeeze(1)
@@ -315,7 +315,7 @@ def main(args):
                                 trainable_model.requires_grad_(False)
                                 disc_optimizer.zero_grad()
 
-                                true_labels=torch.ones((args.batch_size))
+                                true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
                                 '''translated_data=trainable_model(data)
                                 reconstructed_data=frozen_model(translated_data)'''
                                 predicted_labels=disc(input_data)
@@ -325,7 +325,7 @@ def main(args):
 
 
                                 #train disc fake batch
-                                fake_labels=torch.zeros((args.batch_size))
+                                fake_labels=torch.zeros((args.batch_size)).to(device,torch_dtype)
                                 translated_data=trainable_model(data)
                                 reconstructed_data=frozen_model(translated_data)
                                 predicted_labels=disc(reconstructed_data)
@@ -339,7 +339,7 @@ def main(args):
                                 gen_optimizer.zero_grad()
                                 disc.requires_grad_(False)
                                 trainable_model.requires_grad_(True)
-                                true_labels=torch.ones((args.batch_size))
+                                true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
                                 translated_data=trainable_model(data)
                                 reconstructed_data=frozen_model(translated_data)
                                 predicted_labels=disc(reconstructed_data)
@@ -377,7 +377,7 @@ def main(args):
                             trainable_model.requires_grad_(False)
                             disc.requires_grad_(False)
 
-                            true_labels=torch.ones((args.batch_size))
+                            true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
                             translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data)
@@ -386,7 +386,7 @@ def main(args):
 
 
                             #train disc fake batch
-                            fake_labels=torch.zeros((args.batch_size))
+                            fake_labels=torch.zeros((args.batch_size)).to(device,torch_dtype)
                             translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data)
@@ -395,7 +395,7 @@ def main(args):
 
 
                             #train gen
-                            true_labels=torch.ones((args.batch_size))
+                            true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
                             translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data)
