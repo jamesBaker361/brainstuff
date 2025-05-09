@@ -38,7 +38,7 @@ class UnpairedImageDataset(Dataset):
     def __getitem__(self, index):
         img=torch.tensor(self.images[index])
         if self.transform:
-            img=self.transform
+            img=self.transform(img)
         return img
 
 
