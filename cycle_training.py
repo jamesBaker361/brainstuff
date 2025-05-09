@@ -217,7 +217,7 @@ def main(args):
 
 
         def init_loss_dict():
-            return {"ptov_loss":[],"vtop_loss":[],
+            return {"ptov_reconstruction_loss":[],"vtop_reconstruction_loss":[],"ptov_translation_loss":[],"vtop_translation_loss":[],
                              "fmri_disc_real":[],"fmri_disc_fake":[],"fmri_gen":[],
                              "pixel_disc_real":[],"pixel_disc_fake":[],"pixel_gen":[]}
         
@@ -284,9 +284,9 @@ def main(args):
 
                     else:
 
-                        for trainable_model,frozen_model,optimizer,data,key in [
-                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_loss"],
-                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]:
+                        for trainable_model,frozen_model,optimizer,data,key,translation_key in [
+                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_reconstruction_loss","vtop_translation_loss"],
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_reconstruction_loss","ptov_translation_loss"]]:
                             trainable_model.requires_grad_(True)
                             frozen_model.requires_grad_(False)
                             optimizer.zero_grad()
@@ -351,8 +351,8 @@ def main(args):
                         else:
 
                             for trainable_model,frozen_model,optimizer,data,key in zip([
-                                #[fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_loss"],
-                                [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]):
+                                #[fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_reconstruction_loss"],
+                                [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_reconstruction_loss"]]):
                                 trainable_model.requires_grad_(True)
                                 frozen_model.requires_grad_(False)
                                 optimizer.zero_grad()
@@ -404,8 +404,8 @@ def main(args):
                     else:
 
                         for trainable_model,frozen_model,optimizer,data,key in [
-                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_loss"],
-                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]:
+                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_reconstruction_loss"],
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_reconstruction_loss"]]:
                             trainable_model.requires_grad_(False)
                             frozen_model.requires_grad_(False)
                             translated_data=trainable_model(data)
@@ -417,7 +417,7 @@ def main(args):
                 if args.use_discriminator:
                     key_list=["fmri_disc_real","fmri_disc_fake","fmri_gen","pixel_disc_real","pixel_disc_fake","pixel_gen"]
                 else:
-                    key_list=["ptov_loss","vtop_loss"]
+                    key_list=["ptov_reconstruction_loss","vtop_reconstruction_loss"]
                 for key in key_list:
                     metrics[f"{name}_{key}"]=np.mean(loss_dict[key])
 
@@ -426,7 +426,7 @@ def main(args):
                     if args.use_discriminator:
                         key_list=["pixel_disc_real","pixel_disc_fake","pixel_gen"]
                     else:
-                        key_list=["ptov_loss","vtop_loss"]
+                        key_list=["ptov_reconstruction_loss","vtop_reconstruction_loss"]
                     for key in key_list:
                         metrics[f"{name}_{key}"]=np.mean(loss_dict[key])
             
@@ -481,8 +481,8 @@ def main(args):
 
                 else:
                     for trainable_model,frozen_model,optimizer,data,key in [
-                        [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_loss"],
-                        [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_loss"]]:
+                        [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_reconstruction_loss"],
+                        [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_reconstruction_loss"]]:
                         trainable_model.requires_grad_(False)
                         frozen_model.requires_grad_(False)
                         translated_data=trainable_model(data)
