@@ -173,7 +173,9 @@ def main(args):
             print("gen_img max,min,size",gen_img.max(),gen_img.min(),gen_img.size())
             gen_fmri=pixel_to_fmri(img)
             print("gen fmri max,min,size",gen_fmri.max(),gen_fmri.min(),gen_fmri.size())
-        img=img.unsqueeze(0).cpu().permute(0, 2, 3, 1).float().numpy()
+        print('img.size()',img.size())
+        img=img[0].unsqueeze(0).cpu().permute(0, 2, 3, 1).float().numpy()
+        print("img.shape",img.shape)
         try:
             pil_img=Image.fromarray(img) #good as is
             pil_img.save("img.png")
