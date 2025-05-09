@@ -162,8 +162,8 @@ def main(args):
         pixel_to_fmri,fmri_to_pixel,ptof_optimizer,ftop_optimizer=accelerator.prepare(pixel_to_fmri,fmri_to_pixel,ptof_optimizer,ftop_optimizer)
 
         if args.use_discriminator:
-            pixel_discriminator=Discriminator(image_size,args.n_layers_disc,"pixel",args.kernel_size)
-            fmri_discriminator=Discriminator(fmri_size,args.n_layers_disc,args.fmri_type,args.kernel_size)
+            pixel_discriminator=Discriminator(image_size,args.n_layers_disc,"pixel",args.kernel_size,2)
+            fmri_discriminator=Discriminator(fmri_size,args.n_layers_disc,args.fmri_type,args.kernel_size,2)
 
             pdisc_optimizer=torch.optim.AdamW([p for p in pixel_discriminator.parameters()])
             fmridisc_optimizer=torch.optim.AdamW([p for p in fmri_discriminator.parameters()])
@@ -395,8 +395,6 @@ def main(args):
 
 
                             #train gen
-                            disc.requires_grad_(False)
-                            trainable_model.requires_grad_(True)
                             true_labels=torch.ones((args.batch_size))
                             translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)
@@ -450,6 +448,8 @@ def main(args):
 
                 translated_fmri=pixel_to_fmri(images)
                 reconstructed_image=fmri_to_pixel(translated_fmri)
+
+                
 
 
 
