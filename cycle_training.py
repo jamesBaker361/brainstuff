@@ -514,7 +514,7 @@ def main(args):
                 for key in test_loss_dict.keys():
                     metrics[f"{name}_{key}"]=np.mean(loss_dict[key])
             translated_correlation=pixelwise_corr_from_pil(image_list,translated_image_list).mean().item()
-            reconstructed_correlation=pixelwise_corr_from_pil(image_list,reconstructed_image_list)
+            reconstructed_correlation=pixelwise_corr_from_pil(image_list,reconstructed_image_list).mean().item()
 
             translated_clip=np.mean(clip_difference(image_list,translated_image_list))
             reconstructed_clip=np.mean(clip_difference(image_list,reconstructed_image_list))
