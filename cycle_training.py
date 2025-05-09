@@ -444,13 +444,25 @@ def main(args):
                 #labels=batch["labels"]
 
                 translated_image=fmri_to_pixel(fmri)
-                reconstructed_fmri=pixel_to_fmri(translated_image)
+                #reconstructed_fmri=pixel_to_fmri(translated_image)
+
+                translation_mse=F.mse_loss(translated_image,images).cpu().detach().item()
+
+                test_loss_dict["translation_mse"].append(translation_mse)
 
                 translated_fmri=pixel_to_fmri(images)
                 reconstructed_image=fmri_to_pixel(translated_fmri)
 
-                
+                reconstruction_mse=F.mse_loss(reconstructed_image,images).cpu().detach.item()
+                test_loss_dict["reconstruction_mse"].append(reconstruction_mse)
 
+                for img_data,data_list in zip([images,translated_image,reconstructed_image],
+                                          [image_list,translated_image_list,reconstructed_image_list]):
+                    img_np=img_data.cpu().permute(0, 2, 3, 1).float().numpy()
+                    img_np=img_np*255
+                    img_np=img_np.round().astype(np.uint8)
+                    for i in img_np:
+                        data_list.append(Image.fromarray(i))
 
 
 
@@ -480,11 +492,7 @@ def main(args):
                     reconstructed_image_list.append(reconstructed_data)'''
             metrics={}
             for name,loss_dict in zip(["test"],[test_loss_dict]):
-                if args.use_discriminator:
-                    key_list=["fmri_gen","pixel_gen"]
-                else:
-                    key_list=["ptov_loss","vtop_loss"]
-                for key in key_list:
+                for key in test_loss_dict.keys():
                     metrics[f"{name}_{key}"]=np.mean(loss_dict[key])
         accelerator.log(metrics)
         #log images and maybe score their realism???
