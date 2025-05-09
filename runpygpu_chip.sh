@@ -27,6 +27,7 @@ module load shared
 module load slurm/ada-slurm/23.02.1
 module load CUDA/11.7.0
 source venv/bin/activate
+export CUDA_LAUNCH_BLOCKING=1
 export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:64
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export TRANSFORMERS_CACHE="/umbc/ada/donengel/common/trans_cache"
