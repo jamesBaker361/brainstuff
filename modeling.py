@@ -70,6 +70,7 @@ class PixelVoxelArrayModel(nn.Module):
             
             shape=(4, *shape[1:])
         target_shape=shape
+        print('shape',shape)
         for _ in range(n_layers):
             in_channels=shape[0]
             if input_modality=="array":
@@ -91,6 +92,7 @@ class PixelVoxelArrayModel(nn.Module):
         print('final_down_shape',final_down_shape)
         up_layer_list=[]
         shape=target_shape
+        print('shape',shape)
         for _ in range(n_layers_trans):
             out_channels=shape[0]
             up_layer_list.append(norm(out_channels))
