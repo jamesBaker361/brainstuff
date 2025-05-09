@@ -229,7 +229,7 @@ def main(args):
 
                     fmri=batch["fmri"].to(device,torch_dtype)
                     images=batch["image"].to(device,torch_dtype)
-                    labels=batch["labels"]
+                    #labels=batch["labels"]
 
                     if args.use_discriminator:
                         for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
@@ -360,7 +360,7 @@ def main(args):
                 for batch in validation_set:
                     fmri=batch["fmri"].to(device,torch_dtype)
                     images=batch["image"].to(device,torch_dtype)
-                    labels=batch["labels"]
+                    #labels=batch["labels"]
 
                     if args.use_discriminator:
                         for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
@@ -434,7 +434,7 @@ def main(args):
                     break
                 fmri=batch["fmri"].to(device,torch_dtype)
                 images=batch["image"].to(device,torch_dtype)
-                labels=batch["labels"]
+                #labels=batch["labels"]
 
                 for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in zip([
                             [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,fmri_discriminator,fmridisc_optimizer,"fmri_disc_real","fmri_disc_fake","fmri_gen"],
