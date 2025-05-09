@@ -134,6 +134,8 @@ class PixelVoxelArrayModel(nn.Module):
         if output_modality=="pixel" or output_modality=="voxel":
             up_layer_list.append(ReshapeLayer(shape))
         up_layer_list=up_layer_list[::-1]
+        if output_modality=="pixel":
+            up_layer_list.append(nn.Sigmoid())
         print('initial_up_shape',initial_up_shape)
 
         intermediate_layers=[]
