@@ -124,6 +124,8 @@ class PixelVoxelArrayModel(nn.Module):
 
     def forward(self,x):
         for layer in self.module_list:
+            print(layer)
+            print(x.size())
             x=layer(x)
         return x
 
