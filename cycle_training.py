@@ -453,7 +453,7 @@ def main(args):
                 translated_fmri=pixel_to_fmri(images)
                 reconstructed_image=fmri_to_pixel(translated_fmri)
 
-                reconstruction_mse=F.mse_loss(reconstructed_image,images).cpu().detach.item()
+                reconstruction_mse=F.mse_loss(reconstructed_image,images).cpu().detach().item()
                 test_loss_dict["reconstruction_mse"].append(reconstruction_mse)
 
                 for img_data,data_list in zip([images,translated_image,reconstructed_image],
