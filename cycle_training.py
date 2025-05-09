@@ -32,7 +32,7 @@ parser.add_argument("--fmri_type",type=str,default="voxel",help="array or voxel"
 parser.add_argument("--unpaired_image_dataset",type=str,default="",help="hf path for unpaired images")
 parser.add_argument("--key",type=str,default="image",help="image key if using unpaired images")
 parser.add_argument("--train_limit",type=int,default=-1,help="limit # of training batches")
-parser.add_argument("--test_limit",type=int,default="limit # of testing batches")
+parser.add_argument("--test_limit",type=int,help="limit # of testing batches",default=-1)
 
 def main(args):
     accelerator=Accelerator(log_with="wandb",mixed_precision=args.mixed_precision,gradient_accumulation_steps=args.gradient_accumulation_steps)
