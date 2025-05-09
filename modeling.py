@@ -140,6 +140,7 @@ class PixelVoxelArrayModel(nn.Module):
         if input_modality=="voxel" or input_modality=="pixel":
             intermediate_layers.append(nn.Flatten())
 
+        print("final_down_shape,initial_up_shape",final_down_shape,initial_up_shape)
         intermediate_layers.append(nn.Linear(final_down_shape,initial_up_shape))
 
         for layer in intermediate_layers:
