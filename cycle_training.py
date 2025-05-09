@@ -176,12 +176,12 @@ def main(args):
         
 
         with torch.no_grad():
-            gen_img=fmri_to_pixel(fmri)
+            gen_img=fmri_to_pixel(fmri.unsqueeze(0))
             print("gen_img max,min,size",gen_img.max(),gen_img.min(),gen_img.size())
-            gen_fmri=pixel_to_fmri(img)
+            gen_fmri=pixel_to_fmri(img.unsqueeze(0))
             print("gen fmri max,min,size",gen_fmri.max(),gen_fmri.min(),gen_fmri.size())
         print('img.size()',img.size())
-        img=img.cpu().permute(0, 2, 3, 1).float().numpy()[0]
+        img=img.cpu().permute(1,2,0).float().numpy()
         print("img.shape",img.shape)
         try:
             pil_img=Image.fromarray(img.round().astype("uint8")) #good as is

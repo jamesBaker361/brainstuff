@@ -30,7 +30,7 @@ class ReshapeLayer(nn.Module):
 
     def forward(self,x):
         batch_size=x.size()[0]
-        return x.reshape( *self.dim)
+        return x.reshape(batch_size, *self.dim)
 
 class PixelVoxelArrayModel(nn.Module):
     def __init__(self,
