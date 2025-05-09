@@ -152,7 +152,7 @@ class PixelVoxelArrayModel(nn.Module):
         for layer in up_layer_list:
             zero_input=layer(zero_input)
 
-        print("down layers zero input",zero_input.size())
+        print("up layers zero input",zero_input.size())
 
         self.module_list=nn.ModuleList(down_layer_list+intermediate_layers+up_layer_list)
 
