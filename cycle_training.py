@@ -14,6 +14,7 @@ import torch.nn.functional as F
 import wandb
 from PIL import Image
 import torchvision
+from metric_helpers import pixelwise_corr_from_pil
 
 parser=argparse.ArgumentParser()
 parser.add_argument("--mixed_precision",type=str,default="fp16")
@@ -512,6 +513,11 @@ def main(args):
             for name,loss_dict in zip(["test"],[test_loss_dict]):
                 for key in test_loss_dict.keys():
                     metrics[f"{name}_{key}"]=np.mean(loss_dict[key])
+            translated_correlation=pixelwise_corr_from_pil(image_list,translated_image_list).mean().item()
+            reconstructed_correlation=pixelwise_corr_from_pil(image_list,reconstructed_image_list)
+
+            metrics["translated_correlation"]=translated_correlation
+            metrics["reconstructed_correlation"]=reconstructed_correlation
 
         accelerator.log(metrics)
 
