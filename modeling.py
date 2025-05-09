@@ -73,7 +73,7 @@ class PixelVoxelArrayModel(nn.Module):
         print('shape',shape)
         for _ in range(n_layers):
             in_channels=shape[0]
-            if output_modality=="array":
+            if input_modality=="array":
                 out_channels=in_channels//2
                 down_layer_list.append(down_layer(in_channels,out_channels))
                 shape=[out_channels]
@@ -97,7 +97,7 @@ class PixelVoxelArrayModel(nn.Module):
             out_channels=shape[0]
             up_layer_list.append(norm(out_channels))
             up_layer_list.append(nn.LeakyReLU())
-            if input_modality=="array":
+            if output_modality=="array":
                 in_channels=out_channels//2
                 up_layer_list.append(up_layer(in_channels,out_channels))
                 shape=[in_channels]
