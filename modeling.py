@@ -23,6 +23,15 @@ def compute_input_size_3d(output_size, n_layers,
         dim=dim//factor
     return dim,dim,dim
 
+class ReshapeLayer(nn.Module):
+    def __init__(self,dim, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dim=dim
+
+    def forward(self,x):
+        batch_size=x.size(0)
+        return x.reshape(batch_size, *self.dim)
+
 class PixelVoxelArrayModel(nn.Module):
     def __init__(self,
                  input_dim,
@@ -39,8 +48,9 @@ class PixelVoxelArrayModel(nn.Module):
         self.output_dim=output_dim
 
         
-
+        
         stride=kernel_size//factor
+        padding=stride//factor
         layers=[]
         in_channels=input_dim[0]
         size_function={
@@ -80,7 +90,7 @@ class PixelVoxelArrayModel(nn.Module):
                 shape=[out_channels]
             else:
                 out_channels=in_channels*2
-                down_layer_list.append(down_layer(in_channels,out_channels,kernel_size,stride,padding="same"))
+                down_layer_list.append(down_layer(in_channels,out_channels,kernel_size,stride,padding=padding))
                 shape=(out_channels, *[d//2 for d in shape[1:]])
             down_layer_list.append(nn.LeakyReLU())
             down_layer_list.append(norm(out_channels))
@@ -97,11 +107,16 @@ class PixelVoxelArrayModel(nn.Module):
 
         print('final_down_shape',final_down_shape)
         up_layer_list=[]
-        shape=target_shape
+        shape=output_dim
+        if output_modality=="voxel":
+            up_layer_list.append(nn.Conv3d(4,shape[0],1,1))
+        elif output_modality=="pixel":
+            up_layer_list.append(nn.Conv2d(4,shape[0],1,1))
+            
+            shape=(4, *shape[1:])
         print('shape',shape)
         for _ in range(n_layers_trans):
             out_channels=shape[0]
-            up_layer_list.append(norm(out_channels))
             up_layer_list.append(nn.LeakyReLU())
             if output_modality=="array":
                 in_channels=out_channels//2
@@ -115,13 +130,15 @@ class PixelVoxelArrayModel(nn.Module):
         initial_up_shape=1
         for n in shape:
             initial_up_shape*=n
+
+        if output_modality=="pixel" or output_modality=="voxel":
+            up_layer_list.append(ReshapeLayer(shape))
         up_layer_list=up_layer_list[::-1]
         print('initial_up_shape',initial_up_shape)
 
         intermediate_layers=[]
         if input_modality=="voxel" or input_modality=="pixel":
             intermediate_layers.append(nn.Flatten())
-            up_layer_list.append(down_layer(shape[0],target_shape[0],1,1))
 
         intermediate_layers.append(nn.Linear(final_down_shape,initial_up_shape))
 
@@ -130,6 +147,7 @@ class PixelVoxelArrayModel(nn.Module):
 
         print("intermediate zero input",zero_input.size())
 
+        print(up_layer_list)
         for layer in up_layer_list:
             zero_input=layer(zero_input)
 
@@ -140,8 +158,6 @@ class PixelVoxelArrayModel(nn.Module):
 
     def forward(self,x):
         for layer in self.module_list:
-            print(layer)
-            print(x.size())
             x=layer(x)
         return x
 
@@ -151,30 +167,36 @@ class Discriminator(nn.Module):
                  n_layers,
                   input_modality:str, #one of voxel or pixel or array
                   kernel_size:int,
+                  factor:int,
                     *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.input_dim=input_dim
 
         
 
-        stride=kernel_size//2
+        stride=kernel_size//factor
+        padding=stride//factor
         layers=[]
         in_channels=input_dim[0]
-        conv={
+        down_layer={
             "voxel":nn.Conv3d,
             "pixel":nn.Conv2d,
             "array":nn.Linear
         }[input_modality]
-        batch={
+        norm={
             "voxel":nn.BatchNorm3d,
             "pixel":nn.BatchNorm2d,
-            "array":nn.BatchNorm1d
+            "array":nn.LayerNorm
         }[input_modality]
 
         for _ in range(n_layers):
-            out_channels=in_channels*2
-            layers.append(conv(in_channels,out_channels,kernel_size,stride))
-            layers.append(batch(out_channels))
+            if input_modality=="pixel" or input_modality=="voxel":
+                out_channels=in_channels*2
+                layers.append(down_layer(in_channels,out_channels,kernel_size,stride,padding=padding))
+            else:
+                out_channels=in_channels//2
+                layers.append(down_layer(in_channels,out_channels))
+            layers.append(norm(out_channels))
             layers.append(nn.LeakyReLU())
             in_channels=out_channels
         layers.append(nn.Flatten())
