@@ -80,7 +80,7 @@ class PixelVoxelArrayModel(nn.Module):
                 shape=[out_channels]
             else:
                 out_channels=in_channels*2
-                down_layer_list.append(down_layer(in_channels,out_channels,kernel_size,stride))
+                down_layer_list.append(down_layer(in_channels,out_channels,kernel_size,stride,padding="same"))
                 shape=(out_channels, *[d//2 for d in shape[1:]])
             down_layer_list.append(nn.LeakyReLU())
             down_layer_list.append(norm(out_channels))
