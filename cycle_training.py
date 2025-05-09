@@ -336,7 +336,7 @@ def main(args):
                                 true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
                                 '''translated_data=trainable_model(data)
                                 reconstructed_data=frozen_model(translated_data)'''
-                                predicted_labels=disc(input_data)
+                                predicted_labels=disc(input_data).squeeze(1)
                                 d_loss_real=bce_loss(predicted_labels,true_labels)
                                 accelerator.backward(d_loss_real)
                                 unpaired_train_loss_dict[real_key].append(d_loss_real.cpu().detach().item())
@@ -344,9 +344,9 @@ def main(args):
 
                                 #train disc fake batch
                                 fake_labels=torch.zeros((args.batch_size)).to(device,torch_dtype)
-                                translated_data=trainable_model(data)
+                                translated_data=trainable_model(input_data)
                                 reconstructed_data=frozen_model(translated_data)
-                                predicted_labels=disc(reconstructed_data)
+                                predicted_labels=disc(reconstructed_data).squeeze(1)
                                 d_loss_fake=bce_loss(predicted_labels,fake_labels)
                                 accelerator.backward(d_loss_fake)
                                 unpaired_train_loss_dict[fake_key].append(d_loss_fake.cpu().detach().item())
@@ -360,7 +360,7 @@ def main(args):
                                 true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
                                 translated_data=trainable_model(data)
                                 reconstructed_data=frozen_model(translated_data)
-                                predicted_labels=disc(reconstructed_data)
+                                predicted_labels=disc(reconstructed_data).squeeze(1)
                                 gen_loss=bce_loss(predicted_labels,true_labels)
                                 accelerator.backward(gen_loss)
                                 unpaired_train_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
@@ -388,7 +388,7 @@ def main(args):
                     #labels=batch["labels"]
 
                     if args.use_discriminator:
-                        for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,real_key,fake_key,gen_key in [
+                        for trainable_model,frozen_model,gen_optimizer,input_data,disc,disc_optimizer,real_key,fake_key,gen_key in [
                             [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,fmri_discriminator,fmridisc_optimizer,"fmri_disc_real","fmri_disc_fake","fmri_gen"],
                             [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]:
                             frozen_model.requires_grad_(False)
@@ -396,27 +396,27 @@ def main(args):
                             disc.requires_grad_(False)
 
                             true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
-                            translated_data=trainable_model(data)
-                            reconstructed_data=frozen_model(translated_data)
-                            predicted_labels=disc(reconstructed_data)
+                            '''translated_data=trainable_model(input_data)
+                            reconstructed_data=frozen_model(translated_data)'''
+                            predicted_labels=disc(input_data).squeeze(1)
                             d_loss_real=bce_loss(predicted_labels,true_labels)
                             val_loss_dict[real_key].append(d_loss_real.cpu().detach().item())
 
 
                             #train disc fake batch
                             fake_labels=torch.zeros((args.batch_size)).to(device,torch_dtype)
-                            translated_data=trainable_model(data)
+                            translated_data=trainable_model(input_data)
                             reconstructed_data=frozen_model(translated_data)
-                            predicted_labels=disc(reconstructed_data)
+                            predicted_labels=disc(reconstructed_data).squeeze(1)
                             d_loss_fake=bce_loss(predicted_labels,fake_labels)
                             val_loss_dict[fake_key].append(d_loss_fake.cpu().detach().item())
 
 
                             #train gen
                             true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
-                            translated_data=trainable_model(data)
+                            translated_data=trainable_model(input_data)
                             reconstructed_data=frozen_model(translated_data)
-                            predicted_labels=disc(reconstructed_data)
+                            predicted_labels=disc(reconstructed_data).squeeze(1)
                             gen_loss=bce_loss(predicted_labels,true_labels)
                             val_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
                     else:
