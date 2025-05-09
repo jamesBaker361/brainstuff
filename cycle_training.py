@@ -34,6 +34,24 @@ parser.add_argument("--key",type=str,default="image",help="image key if using un
 parser.add_argument("--train_limit",type=int,default=-1,help="limit # of training batches")
 parser.add_argument("--test_limit",type=int,help="limit # of testing batches",default=-1)
 
+def concat_images_horizontally(img1: Image.Image, img2: Image.Image, img3: Image.Image) -> Image.Image:
+    """
+    Concatenate three PIL images horizontally. All images must have the same height.
+    """
+    # Check if heights match
+    if not (img1.height == img2.height == img3.height):
+        raise ValueError("All images must have the same height for horizontal concatenation.")
+
+    total_width = img1.width + img2.width + img3.width
+    height = img1.height
+
+    new_img = Image.new('RGB', (total_width, height))
+    new_img.paste(img1, (0, 0))
+    new_img.paste(img2, (img1.width, 0))
+    new_img.paste(img3, (img1.width + img2.width, 0))
+
+    return new_img
+
 def main(args):
     accelerator=Accelerator(log_with="wandb",mixed_precision=args.mixed_precision,gradient_accumulation_steps=args.gradient_accumulation_steps)
     print("accelerator device",accelerator.device)
@@ -494,7 +512,13 @@ def main(args):
             for name,loss_dict in zip(["test"],[test_loss_dict]):
                 for key in test_loss_dict.keys():
                     metrics[f"{name}_{key}"]=np.mean(loss_dict[key])
+
         accelerator.log(metrics)
+
+        for real,translated,reconstructed in zip(image_list,translated_image_list,reconstructed_image_list):
+            concat=concat_images_horizontally(real,translated,reconstructed)
+            accelerator.log({"result":wandb.Image(concat)})
+
         #log images and maybe score their realism???
 
 
