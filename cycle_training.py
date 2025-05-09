@@ -83,11 +83,13 @@ def main(args):
 
             train_fmri.extend(subject_fmri_train)
             print(sub,'subject_fmri_train.max(),subject_fmri_train.min()',subject_fmri_train.max(),subject_fmri_train.min())
+            print(sub,'subject_stim_train.max(),subject_fmri_train.min()',subject_stim_train.max(),subject_stim_train.min())
             train_img.extend(subject_stim_train)
             train_labels.extend(subject_train_labels)
 
             test_fmri.extend(subject_fmri_test)
             print(sub,'subject_fmri_test.max(),subject_fmri_test.min()',subject_fmri_test.max(),subject_fmri_test.min())
+            print(sub,'subject_stim_test,max(),subject_stim_test.min()',subject_stim_test.max(),subject_stim_test.min())
             test_img.extend(subject_stim_test)
             test_labels.extend(subject_test_labels)
 
@@ -126,8 +128,13 @@ def main(args):
         for batch in train_dataset:
             break
 
-        fmri_size=batch["fmri"].size()
-        image_size=batch["image"].size()
+        
+        img=batch["image"].to(device,torch_dtype)
+        fmri=batch["fmri"].to(device,torch_dtype)
+        fmri_size=fmri.size()
+        image_size=img.size()
+        print("img min, max",img.min(),img.max())
+        print("fmri min,max",fmri.min(),fmri.max())
 
         print("fmri size",fmri_size)
         print("image size",image_size)
@@ -163,10 +170,7 @@ def main(args):
         for batch in train_loader:
             break
 
-        img=batch["image"].to(device,torch_dtype)
-        fmri=batch["fmri"].to(device,torch_dtype)
-        print("img min, max",img.min(),img.max())
-        print("fmri min,max",fmri.min(),fmri.max())
+        
 
         with torch.no_grad():
             gen_img=fmri_to_pixel(fmri)
