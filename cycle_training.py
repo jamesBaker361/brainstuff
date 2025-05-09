@@ -174,7 +174,7 @@ def main(args):
             gen_fmri=pixel_to_fmri(img)
             print("gen fmri max,min,size",gen_fmri.max(),gen_fmri.min(),gen_fmri.size())
         print('img.size()',img.size())
-        img=img[0].unsqueeze(0).cpu().permute(0, 2, 3, 1).float().numpy()
+        img=img.cpu().permute(0, 2, 3, 1).float().numpy()[0]
         print("img.shape",img.shape)
         try:
             pil_img=Image.fromarray(img.round().astype("uint8")) #good as is
