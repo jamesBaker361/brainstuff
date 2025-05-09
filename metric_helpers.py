@@ -49,7 +49,7 @@ def pixelwise_corr_from_pil(real_imgs, generated_imgs):
 
     return pixelwise_correlation(real_tensor, generated_tensor)  # Uses function from earlier
 
-def clip_similarities(real_imgs:list[Image.Image], generated_imgs:list[Image.Image]):
+def clip_difference(real_imgs:list[Image.Image], generated_imgs:list[Image.Image]):
     """
     Args:
         real_imgs: list of ground truth PIL images

@@ -14,7 +14,7 @@ import torch.nn.functional as F
 import wandb
 from PIL import Image
 import torchvision
-from metric_helpers import pixelwise_corr_from_pil
+from metric_helpers import pixelwise_corr_from_pil,clip_difference
 
 parser=argparse.ArgumentParser()
 parser.add_argument("--mixed_precision",type=str,default="fp16")
@@ -516,8 +516,16 @@ def main(args):
             translated_correlation=pixelwise_corr_from_pil(image_list,translated_image_list).mean().item()
             reconstructed_correlation=pixelwise_corr_from_pil(image_list,reconstructed_image_list)
 
+            translated_clip=np.mean(clip_difference(image_list,translated_image_list))
+            reconstructed_clip=np.mean(clip_difference(image_list,reconstructed_image_list))
+
             metrics["translated_correlation"]=translated_correlation
             metrics["reconstructed_correlation"]=reconstructed_correlation
+
+            metrics["translated_clip"]=translated_clip
+            metrics["reconstructed_clip"]=reconstructed_clip
+
+            print(metrics)
 
         accelerator.log(metrics)
 
