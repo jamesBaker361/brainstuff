@@ -123,6 +123,7 @@ for i,idx in enumerate(train_im_idx):
         print(f"{i}/{len(train_im_idx)}")
         print('fmri_train[i].shape',fmri_train[i].shape)
         print('sorted(sig_train[idx])',sorted(sig_train[idx]))
+    print("stim max min",stim_train[i].max(),stim_train[i].min())
 
 #np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub),fmri_train )
 #np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_stim_sub{}.npy'.format(sub,sub),stim_train )
@@ -139,6 +140,7 @@ for i,idx in enumerate(test_im_idx):
         print('fmri_test[i].shape',fmri_test[i].shape)
         print('sorted(sig_test[idx])',sorted(sig_test[idx]))
         print(f"Test {i+1}/{num_test}: image {idx}")
+    print("stim test max min",stim_test[i].max(),stim_test[i].min())
 
 #np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_fmriavg_nsdgeneral_sub{}.npy'.format(sub,sub),fmri_test )
 #np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_stim_sub{}.npy'.format(sub,sub),stim_test )
@@ -164,10 +166,10 @@ np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_cap_su
 
 print("Caption data are saved.")'''
 save_path = os.environ["BRAIN_DATA_DIR"]+f"/subj{sub:02d}_fmriflattened_stim_paired.npz"
-np.savez_compressed(
+'''np.savez_compressed(
     save_path,
     fmri_train=fmri_train,
     stim_train=stim_train,
     fmri_test=fmri_test,
     stim_test=stim_test
-)
+)'''
