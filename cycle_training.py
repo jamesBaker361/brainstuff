@@ -361,18 +361,6 @@ def main(args):
                                 unpaired_train_loss_dict[key].append(loss.cpu().detach().item())
                                 accelerator.backward(loss)
                                 optimizer.step()
-                        if args.translation_loss:
-                            for trainable_model,optimizer,input_data,output_data,key in [
-                            #    [fmri_to_pixel,ftop_optimizer,fmri,images,"vtop_translation_loss"],
-                                [pixel_to_fmri,ptof_optimizer,images,fmri,"ptov_translation_loss"]
-                            ]:
-                                trainable_model.requires_grad_(True)
-                                optimizer.zero_grad()
-                                translated_data=trainable_model(input_data)
-                                loss=F.mse_loss(output_data,translated_data)
-                                train_loss_dict[key].append(loss.cpu().detach().item())
-                                accelerator.backward(loss)
-                                optimizer.step()
             #validation
             with torch.no_grad():
                 for batch in validation_set:
@@ -435,10 +423,13 @@ def main(args):
                             val_loss_dict[key].append(loss.cpu().detach().item())
             metrics={}
             for name,loss_dict in zip(["val","train"],[val_loss_dict,train_loss_dict]):
+                key_list=[]
                 if args.use_discriminator:
-                    key_list=["fmri_disc_real","fmri_disc_fake","fmri_gen","pixel_disc_real","pixel_disc_fake","pixel_gen"]
-                else:
-                    key_list=["ptov_reconstruction_loss","vtop_reconstruction_loss"]
+                    key_list+=["fmri_disc_real","fmri_disc_fake","fmri_gen","pixel_disc_real","pixel_disc_fake","pixel_gen"]
+                if args.reconstruction_loss:
+                    key_list+=["ptov_reconstruction_loss","vtop_reconstruction_loss"]
+                if args.translation_loss:
+                    key_list+=["ptov_translation_loss","vtop_translation_loss"]
                 for key in key_list:
                     metrics[f"{name}_{key}"]=np.mean(loss_dict[key])
 
@@ -446,8 +437,8 @@ def main(args):
                 for name,loss_dict in zip(["unpaired_train"],[unpaired_train_loss_dict]):
                     if args.use_discriminator:
                         key_list=["pixel_disc_real","pixel_disc_fake","pixel_gen"]
-                    else:
-                        key_list=["ptov_reconstruction_loss","vtop_reconstruction_loss"]
+                    if args.reconstruction_loss:
+                        key_list+=["ptov_reconstruction_loss"]
                     for key in key_list:
                         metrics[f"{name}_{key}"]=np.mean(loss_dict[key])
             
