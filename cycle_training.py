@@ -221,6 +221,7 @@ def main(args):
             train_loss_dict=init_loss_dict()
             unpaired_train_loss_dict=init_loss_dict()
             val_loss_dict=init_loss_dict()
+            start=time.time()
             for k,batch in enumerate(train_loader):
                 if k==args.train_limit:
                     break
@@ -370,6 +371,8 @@ def main(args):
                                 unpaired_train_loss_dict[key].append(loss.cpu().detach().item())
                                 accelerator.backward(loss)
                                 optimizer.step()
+            end=time.time()
+            print(f"epoch {e} elapsed {end-start}")
             #validation
             if len(validation_set)!=0:
                 with torch.no_grad():
