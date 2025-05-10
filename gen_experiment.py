@@ -4,7 +4,7 @@ for pairing in ["unpaired","paired"]:
             for disc in ["disc","no_disc"]:
                 name=f"{pairing}_{translate}_{recons}_{disc}"
                 command=f" sbatch -J cycle --err=slurm_chip/cycle/{name}.err --out=slurm_chip/cycle/{name}.out runpygpu_chip_L40S.sh "
-                command+=" cycle_training.py --epochs 250 --validation_interval 10 --project_name cycle_sub1 --sublist 1 "
+                command+=" cycle_training.py --epochs 250 --validation_interval 10 --project_name cycle_sub1 --sublist 1 --fmri_type array "
                 if pairing=="paired":
                     command+=" --unpaired_image_dataset nouman-10/wikiart_testing "
                 if translate=="trans":
