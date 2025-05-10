@@ -431,6 +431,30 @@ def main(args):
                                 translated_data=trainable_model(input_data)
                                 loss=F.mse_loss(output_data,translated_data)
                                 val_loss_dict[key].append(loss.cpu().detach().item())
+                    for batch in validation_set:
+                        fmri=batch["fmri"].to(device,torch_dtype)
+                        images=batch["image"].to(device,torch_dtype)
+                        break
+                    translated_image=fmri_to_pixel(fmri)
+                    translated_fmri=pixel_to_fmri(images)
+                    reconstructed_image=fmri_to_pixel(translated_fmri)
+
+                    reconstructed_image_list=[]
+                    translated_image_list=[]
+                    image_list=[]
+
+                    for img_data,data_list in zip([images,translated_image,reconstructed_image],
+                                          [image_list,translated_image_list,reconstructed_image_list]):
+                        img_np=img_data.cpu().permute(0, 2, 3, 1).float().numpy()
+                        img_np=img_np*255
+                        img_np=img_np.round().astype(np.uint8)
+                        for i in img_np:
+                            data_list.append(Image.fromarray(i))
+
+                    for real,translated,reconstructed in zip(image_list,translated_image_list,reconstructed_image_list):
+                        concat=concat_images_horizontally(real,translated,reconstructed)
+                        accelerator.log({"val_result":wandb.Image(concat)})
+
             metrics={}
             if e %args.validation_interval==0:
                 name_list=["val","train"]
@@ -513,7 +537,7 @@ def main(args):
 
         for real,translated,reconstructed in zip(image_list,translated_image_list,reconstructed_image_list):
             concat=concat_images_horizontally(real,translated,reconstructed)
-            accelerator.log({"result":wandb.Image(concat)})
+            accelerator.log({"test_result":wandb.Image(concat)})
 
 if __name__=='__main__':
     print_details()
