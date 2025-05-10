@@ -199,41 +199,6 @@ def main(args):
             print("gen_img max,min,size",gen_img.max(),gen_img.min(),gen_img.size())
             gen_fmri=pixel_to_fmri(img.unsqueeze(0))
             print("gen fmri max,min,size",gen_fmri.max(),gen_fmri.min(),gen_fmri.size())
-        print('img.size()',img.size())
-        img=img.cpu().permute(1,2,0).float().numpy()
-        print("img.shape",img.shape)
-        try:
-            pil_img=Image.fromarray(img.round().astype("uint8")) #good as is
-            pil_img.save("img.png")
-            accelerator.log({
-                "pil_img":wandb.Image(pil_img),
-            })
-        except Exception as e:
-            print("pil_img=Image.fromarray(img) failed")
-            print(e)
-
-        try:
-            pil_rescaled_img=Image.fromarray((img*255).round().astype("uint8")) #assuming its [0,1]
-            pil_rescaled_img.save("img_rescaled.png")
-            accelerator.log({
-                "pil_rescaled_img":wandb.Image(pil_rescaled_img)
-            })
-        except Exception as e:
-            print("Image.fromarray(img*255) failed")
-            print(e)
-
-        
-        try:
-            pil_rescaled_shifted_img=Image.fromarray((img*255 +128).round().astype("uint8")) #assuming its [-1,1]
-            pil_rescaled_img.save("img_rescaled_shifted.png")
-            accelerator.log({
-                "pil_rescaled_shifted_img":wandb.Image(pil_rescaled_shifted_img)
-            })
-        except Exception as e:
-            print("Image.fromarray(img*255 +128) failed")
-            print(e)
-
-
 
         def init_loss_dict():
             return {"ptov_reconstruction_loss":[],"vtop_reconstruction_loss":[],"ptov_translation_loss":[],"vtop_translation_loss":[],
@@ -482,33 +447,6 @@ def main(args):
                     img_np=img_np.round().astype(np.uint8)
                     for i in img_np:
                         data_list.append(Image.fromarray(i))
-
-
-
-
-                '''if args.use_discriminator:
-                    for trainable_model,frozen_model,gen_key in [
-                        [fmri_to_pixel,pixel_to_fmri,fmri,"fmri_gen"],
-                            #[pixel_to_voxel,voxel_to_pixel,ptov_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]:
-                    ]:
-                        true_labels=torch.ones((args.batch_size))
-                        translated_data=trainable_model(data)
-                        reconstructed_data=frozen_model(translated_data)
-                        predicted_labels=disc(reconstructed_data)
-                        gen_loss=bce_loss(predicted_labels,true_labels)
-                        test_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
-
-                else:
-                    for trainable_model,frozen_model,optimizer,data,key in [
-                        [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_reconstruction_loss"],
-                        [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_reconstruction_loss"]]:
-                        trainable_model.requires_grad_(False)
-                        frozen_model.requires_grad_(False)
-                        translated_data=trainable_model(data)
-                        reconstructed_data=frozen_model(translated_data)
-                        loss=F.mse_loss(data,reconstructed_data)
-                        test_loss_dict[key].append(loss.cpu().detach().item())
-                    reconstructed_image_list.append(reconstructed_data)'''
             metrics={}
             for name,loss_dict in zip(["test"],[test_loss_dict]):
                 for key in test_loss_dict.keys():
@@ -532,12 +470,6 @@ def main(args):
         for real,translated,reconstructed in zip(image_list,translated_image_list,reconstructed_image_list):
             concat=concat_images_horizontally(real,translated,reconstructed)
             accelerator.log({"result":wandb.Image(concat)})
-
-        #log images and maybe score their realism???
-
-
-
-
 
 if __name__=='__main__':
     print_details()
