@@ -348,7 +348,7 @@ def main(args):
                                 disc.requires_grad_(False)
                                 trainable_model.requires_grad_(True)
                                 true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
-                                translated_data=trainable_model(data)
+                                translated_data=trainable_model(input_data)
                                 reconstructed_data=frozen_model(translated_data)
                                 predicted_labels=disc(reconstructed_data).squeeze(1)
                                 gen_loss=bce_loss(predicted_labels,true_labels)
