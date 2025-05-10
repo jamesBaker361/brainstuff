@@ -29,7 +29,7 @@ class UnpairedImageDataset(Dataset):
     def __init__(self,hf_dataset_path,key,transform=None):
         super().__init__()
         data=load_dataset(hf_dataset_path,split="train")
-        self.images=[np.array(row[key]).astype(np.float32)  for row in data]
+        self.images=[np.transpose(np.array(row[key]).astype(np.float32),(2,0,1) )  for row in data]
         self.transform=transform
 
     def __len__(self):
