@@ -326,7 +326,7 @@ def main(args):
                         if args.use_discriminator:
                             for trainable_model,frozen_model,gen_optimizer,disc,disc_optimizer,input_data,real_key,fake_key,gen_key in [
                                 #[fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,fmri_discriminator,fmridisc_optimizer,fmri,images,"fmri_disc_real","fmri_disc_fake","fmri_gen"],
-                                [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,pixel_discriminator,pdisc_optimizer,images,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]:
+                                [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,pixel_discriminator,pdisc_optimizer,images,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]:
                                 frozen_model.requires_grad_(False)
 
                                 #train disc real batch
