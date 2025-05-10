@@ -37,21 +37,29 @@ parser.add_argument("--test_limit",type=int,help="limit # of testing batches",de
 parser.add_argument("--translation_loss",action="store_true")
 parser.add_argument("--reconstruction_loss",action="store_true")
 
-def concat_images_horizontally(img1: Image.Image, img2: Image.Image, img3: Image.Image) -> Image.Image:
+def concat_images_horizontally(*imgs: Image.Image) -> Image.Image:
     """
-    Concatenate three PIL images horizontally. All images must have the same height.
+    Concatenate a variable number of PIL images horizontally.
+    All images must have the same height.
     """
-    # Check if heights match
-    if not (img1.height == img2.height == img3.height):
+    if len(imgs) == 0:
+        raise ValueError("At least one image must be provided.")
+
+    # Convert all images to RGB (optional, but helpful)
+    imgs = [img.convert("RGB") for img in imgs]
+
+    # Check that all heights match
+    height = imgs[0].height
+    if not all(img.height == height for img in imgs):
         raise ValueError("All images must have the same height for horizontal concatenation.")
 
-    total_width = img1.width + img2.width + img3.width
-    height = img1.height
-
+    total_width = sum(img.width for img in imgs)
     new_img = Image.new('RGB', (total_width, height))
-    new_img.paste(img1, (0, 0))
-    new_img.paste(img2, (img1.width, 0))
-    new_img.paste(img3, (img1.width + img2.width, 0))
+
+    x_offset = 0
+    for img in imgs:
+        new_img.paste(img, (x_offset, 0))
+        x_offset += img.width
 
     return new_img
 
