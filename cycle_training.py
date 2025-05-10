@@ -36,6 +36,7 @@ parser.add_argument("--train_limit",type=int,default=-1,help="limit # of trainin
 parser.add_argument("--test_limit",type=int,help="limit # of testing batches",default=-1)
 parser.add_argument("--translation_loss",action="store_true")
 parser.add_argument("--reconstruction_loss",action="store_true")
+parser.add_argument("--validation_interval",type= int,default=1)
 
 def concat_images_horizontally(*imgs: Image.Image) -> Image.Image:
     """
@@ -224,7 +225,7 @@ def main(args):
                 if k==args.train_limit:
                     break
                 with accelerator.accumulate():
-                    if random.random() < args.val_split:
+                    if e %args.validation_interval==0 and random.random() < args.val_split:
                         validation_set.append(batch)
                         continue
 
@@ -370,67 +371,74 @@ def main(args):
                                 accelerator.backward(loss)
                                 optimizer.step()
             #validation
-            with torch.no_grad():
-                for batch in validation_set:
-                    fmri=batch["fmri"].to(device,torch_dtype)
-                    images=batch["image"].to(device,torch_dtype)
-                    #labels=batch["labels"]
+            if len(validation_set)!=0:
+                with torch.no_grad():
+                    for batch in validation_set:
+                        fmri=batch["fmri"].to(device,torch_dtype)
+                        images=batch["image"].to(device,torch_dtype)
+                        #labels=batch["labels"]
 
-                    if args.use_discriminator:
-                        for trainable_model,frozen_model,gen_optimizer,input_data,disc,disc_optimizer,real_key,fake_key,gen_key in [
-                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,fmri_discriminator,fmridisc_optimizer,"fmri_disc_real","fmri_disc_fake","fmri_gen"],
-                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]:
-                            frozen_model.requires_grad_(False)
-                            trainable_model.requires_grad_(False)
-                            disc.requires_grad_(False)
+                        if args.use_discriminator:
+                            for trainable_model,frozen_model,gen_optimizer,input_data,disc,disc_optimizer,real_key,fake_key,gen_key in [
+                                [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,fmri_discriminator,fmridisc_optimizer,"fmri_disc_real","fmri_disc_fake","fmri_gen"],
+                                [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,pixel_discriminator,pdisc_optimizer,"pixel_disc_real","pixel_disc_fake","pixel_gen"]]:
+                                frozen_model.requires_grad_(False)
+                                trainable_model.requires_grad_(False)
+                                disc.requires_grad_(False)
 
-                            true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
-                            '''translated_data=trainable_model(input_data)
-                            reconstructed_data=frozen_model(translated_data)'''
-                            predicted_labels=disc(input_data).squeeze(1)
-                            d_loss_real=bce_loss(predicted_labels,true_labels)
-                            val_loss_dict[real_key].append(d_loss_real.cpu().detach().item())
-
-
-                            #train disc fake batch
-                            fake_labels=torch.zeros((args.batch_size)).to(device,torch_dtype)
-                            translated_data=trainable_model(input_data)
-                            reconstructed_data=frozen_model(translated_data)
-                            predicted_labels=disc(reconstructed_data).squeeze(1)
-                            d_loss_fake=bce_loss(predicted_labels,fake_labels)
-                            val_loss_dict[fake_key].append(d_loss_fake.cpu().detach().item())
+                                true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
+                                '''translated_data=trainable_model(input_data)
+                                reconstructed_data=frozen_model(translated_data)'''
+                                predicted_labels=disc(input_data).squeeze(1)
+                                d_loss_real=bce_loss(predicted_labels,true_labels)
+                                val_loss_dict[real_key].append(d_loss_real.cpu().detach().item())
 
 
-                            #train gen
-                            true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
-                            translated_data=trainable_model(input_data)
-                            reconstructed_data=frozen_model(translated_data)
-                            predicted_labels=disc(reconstructed_data).squeeze(1)
-                            gen_loss=bce_loss(predicted_labels,true_labels)
-                            val_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
-                    if args.reconstruction_loss:
+                                #train disc fake batch
+                                fake_labels=torch.zeros((args.batch_size)).to(device,torch_dtype)
+                                translated_data=trainable_model(input_data)
+                                reconstructed_data=frozen_model(translated_data)
+                                predicted_labels=disc(reconstructed_data).squeeze(1)
+                                d_loss_fake=bce_loss(predicted_labels,fake_labels)
+                                val_loss_dict[fake_key].append(d_loss_fake.cpu().detach().item())
 
-                        for trainable_model,frozen_model,optimizer,data,key in [
-                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_reconstruction_loss"],
-                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_reconstruction_loss"]]:
-                            trainable_model.requires_grad_(False)
-                            frozen_model.requires_grad_(False)
-                            translated_data=trainable_model(data)
-                            reconstructed_data=frozen_model(translated_data)
-                            loss=F.mse_loss(data,reconstructed_data)
-                            val_loss_dict[key].append(loss.cpu().detach().item())
 
-                    if args.translation_loss:
-                        for trainable_model,optimizer,input_data,output_data,key in [
-                            [fmri_to_pixel,ftop_optimizer,fmri,images,"vtop_translation_loss"],
-                            [pixel_to_fmri,ptof_optimizer,images,fmri,"ptov_translation_loss"]
-                        ]:
-                            trainable_model.requires_grad_(False)
-                            translated_data=trainable_model(input_data)
-                            loss=F.mse_loss(output_data,translated_data)
-                            val_loss_dict[key].append(loss.cpu().detach().item())
+                                #train gen
+                                true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
+                                translated_data=trainable_model(input_data)
+                                reconstructed_data=frozen_model(translated_data)
+                                predicted_labels=disc(reconstructed_data).squeeze(1)
+                                gen_loss=bce_loss(predicted_labels,true_labels)
+                                val_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
+                        if args.reconstruction_loss:
+
+                            for trainable_model,frozen_model,optimizer,data,key in [
+                                [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_reconstruction_loss"],
+                                [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_reconstruction_loss"]]:
+                                trainable_model.requires_grad_(False)
+                                frozen_model.requires_grad_(False)
+                                translated_data=trainable_model(data)
+                                reconstructed_data=frozen_model(translated_data)
+                                loss=F.mse_loss(data,reconstructed_data)
+                                val_loss_dict[key].append(loss.cpu().detach().item())
+
+                        if args.translation_loss:
+                            for trainable_model,optimizer,input_data,output_data,key in [
+                                [fmri_to_pixel,ftop_optimizer,fmri,images,"vtop_translation_loss"],
+                                [pixel_to_fmri,ptof_optimizer,images,fmri,"ptov_translation_loss"]
+                            ]:
+                                trainable_model.requires_grad_(False)
+                                translated_data=trainable_model(input_data)
+                                loss=F.mse_loss(output_data,translated_data)
+                                val_loss_dict[key].append(loss.cpu().detach().item())
             metrics={}
-            for name,loss_dict in zip(["val","train"],[val_loss_dict,train_loss_dict]):
+            if e %args.validation_interval==0:
+                name_list=["val","train"]
+                loss_dict_list=[val_loss_dict,train_loss_dict]
+            else:
+                name_list=["train"]
+                loss_dict_list=[train_loss_dict]
+            for name,loss_dict in zip(name_list,loss_dict_list):
                 key_list=[]
                 if args.use_discriminator:
                     key_list+=["fmri_disc_real","fmri_disc_fake","fmri_gen","pixel_disc_real","pixel_disc_fake","pixel_gen"]
