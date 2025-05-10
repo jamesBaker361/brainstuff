@@ -34,6 +34,8 @@ parser.add_argument("--unpaired_image_dataset",type=str,default="",help="hf path
 parser.add_argument("--key",type=str,default="image",help="image key if using unpaired images")
 parser.add_argument("--train_limit",type=int,default=-1,help="limit # of training batches")
 parser.add_argument("--test_limit",type=int,help="limit # of testing batches",default=-1)
+parser.add_argument("--translation_loss",action="store_true")
+parser.add_argument("--reconstruction_loss",action="store_true")
 
 def concat_images_horizontally(img1: Image.Image, img2: Image.Image, img3: Image.Image) -> Image.Image:
     """
@@ -266,11 +268,11 @@ def main(args):
                             train_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
                             gen_optimizer.step()
 
-                    else:
+                    if args.reconstruction_loss:
 
-                        for trainable_model,frozen_model,optimizer,data,key,translation_key in [
-                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_reconstruction_loss","vtop_translation_loss"],
-                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_reconstruction_loss","ptov_translation_loss"]]:
+                        for trainable_model,frozen_model,optimizer,data,key in [
+                            [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_reconstruction_loss"],
+                            [pixel_to_fmri,fmri_to_pixel,ptof_optimizer,images,"ptov_reconstruction_loss"]]:
                             trainable_model.requires_grad_(True)
                             frozen_model.requires_grad_(False)
                             optimizer.zero_grad()
@@ -280,6 +282,19 @@ def main(args):
                             train_loss_dict[key].append(loss.cpu().detach().item())
                             accelerator.backward(loss)
                             optimizer.step()
+                    if args.translation_loss:
+                        for trainable_model,optimizer,input_data,output_data,key in [
+                            [fmri_to_pixel,ftop_optimizer,fmri,images,"vtop_translation_loss"],
+                            [pixel_to_fmri,ptof_optimizer,images,fmri,"ptov_translation_loss"]
+                        ]:
+                            trainable_model.requires_grad_(True)
+                            optimizer.zero_grad()
+                            translated_data=trainable_model(input_data)
+                            loss=F.mse_loss(output_data,translated_data)
+                            train_loss_dict[key].append(loss.cpu().detach().item())
+                            accelerator.backward(loss)
+                            optimizer.step()
+
             #unpaired training
             if args.unpaired_image_dataset!="":
                 for k,images in enumerate(unpaired_loader):
@@ -332,7 +347,7 @@ def main(args):
                                 unpaired_train_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
                                 gen_optimizer.step()
 
-                        else:
+                        if args.reconstruction_loss:
 
                             for trainable_model,frozen_model,optimizer,data,key in zip([
                                 #[fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_reconstruction_loss"],
@@ -344,6 +359,18 @@ def main(args):
                                 reconstructed_data=frozen_model(translated_data)
                                 loss=F.mse_loss(data,reconstructed_data)
                                 unpaired_train_loss_dict[key].append(loss.cpu().detach().item())
+                                accelerator.backward(loss)
+                                optimizer.step()
+                        if args.translation_loss:
+                            for trainable_model,optimizer,input_data,output_data,key in [
+                            #    [fmri_to_pixel,ftop_optimizer,fmri,images,"vtop_translation_loss"],
+                                [pixel_to_fmri,ptof_optimizer,images,fmri,"ptov_translation_loss"]
+                            ]:
+                                trainable_model.requires_grad_(True)
+                                optimizer.zero_grad()
+                                translated_data=trainable_model(input_data)
+                                loss=F.mse_loss(output_data,translated_data)
+                                train_loss_dict[key].append(loss.cpu().detach().item())
                                 accelerator.backward(loss)
                                 optimizer.step()
             #validation
@@ -385,7 +412,7 @@ def main(args):
                             predicted_labels=disc(reconstructed_data).squeeze(1)
                             gen_loss=bce_loss(predicted_labels,true_labels)
                             val_loss_dict[gen_key].append(gen_loss.cpu().detach().item())
-                    else:
+                    if args.reconstruction_loss:
 
                         for trainable_model,frozen_model,optimizer,data,key in [
                             [fmri_to_pixel,pixel_to_fmri,ftop_optimizer,fmri,"vtop_reconstruction_loss"],
@@ -395,6 +422,16 @@ def main(args):
                             translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)
                             loss=F.mse_loss(data,reconstructed_data)
+                            val_loss_dict[key].append(loss.cpu().detach().item())
+
+                    if args.translation_loss:
+                        for trainable_model,optimizer,input_data,output_data,key in [
+                            [fmri_to_pixel,ftop_optimizer,fmri,images,"vtop_translation_loss"],
+                            [pixel_to_fmri,ptof_optimizer,images,fmri,"ptov_translation_loss"]
+                        ]:
+                            trainable_model.requires_grad_(False)
+                            translated_data=trainable_model(input_data)
+                            loss=F.mse_loss(output_data,translated_data)
                             val_loss_dict[key].append(loss.cpu().detach().item())
             metrics={}
             for name,loss_dict in zip(["val","train"],[val_loss_dict,train_loss_dict]):
