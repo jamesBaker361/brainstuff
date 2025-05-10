@@ -13,7 +13,7 @@ for pairing in ["unpaired","paired"]:
                     command+=" --reconstruction_loss "
                 if disc=="disc":
                     command+=" --use_discriminator "
-                if pairing=="unpaired" and translate=="untrans" and disc=="no_disc":
+                if pairing=="paired" and translate=="untrans" and disc=="no_disc":
                     pass
                 else:
                     print(command)
