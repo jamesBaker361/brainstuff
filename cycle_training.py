@@ -111,15 +111,23 @@ def main(args):
             subject_train_labels=[subject_class_labels[sub] for _ in range(n_train)]
             subject_test_labels=[subject_class_labels[sub] for _ in range(n_test)]
 
-            train_fmri.extend(subject_fmri_train)
+            
             print(sub,'subject_fmri_train.max(),subject_fmri_train.min()',subject_fmri_train.max(),subject_fmri_train.min())
             print(sub,'subject_stim_train.max(),subject_fmri_train.min()',subject_stim_train.max(),subject_stim_train.min())
+            print(sub,'subject_fmri_test.max(),subject_fmri_test.min()',subject_fmri_test.max(),subject_fmri_test.min())
+            print(sub,'subject_stim_test,max(),subject_stim_test.min()',subject_stim_test.max(),subject_stim_test.min())
+            
+            fmri_min=min(subject_fmri_train.min(),subject_fmri_test.min())
+            fmri_max=max(subject_fmri_train.max(),subject_fmri_test.max())
+
+            subject_fmri_train=2 * (subject_fmri_train-fmri_min) / (fmri_max-fmri_min) -1
+            subject_fmri_test=2 * (subject_fmri_test-fmri_min) / (fmri_max-fmri_min) -1
+
+            train_fmri.extend(subject_fmri_train)
             train_img.extend(subject_stim_train)
             train_labels.extend(subject_train_labels)
 
             test_fmri.extend(subject_fmri_test)
-            print(sub,'subject_fmri_test.max(),subject_fmri_test.min()',subject_fmri_test.max(),subject_fmri_test.min())
-            print(sub,'subject_stim_test,max(),subject_stim_test.min()',subject_stim_test.max(),subject_stim_test.min())
             test_img.extend(subject_stim_test)
             test_labels.extend(subject_test_labels)
 
@@ -191,6 +199,8 @@ def main(args):
 
         pixel_to_fmri,fmri_to_pixel,ptof_optimizer,ftop_optimizer=accelerator.prepare(pixel_to_fmri,fmri_to_pixel,ptof_optimizer,ftop_optimizer)
 
+        trainable_models=[pixel_to_fmri,fmri_to_pixel]
+
         if args.use_discriminator:
             pixel_discriminator=Discriminator(image_size,args.n_layers_disc,"pixel",args.kernel_size,2)
             fmri_discriminator=Discriminator(fmri_size,args.n_layers_disc,args.fmri_type,args.kernel_size,2)
@@ -200,6 +210,10 @@ def main(args):
 
             pixel_discriminator,fmri_discriminator,pdisc_optimizer,fmridisc_optimizer=accelerator.prepare(pixel_discriminator,fmri_discriminator,pdisc_optimizer,fmridisc_optimizer)
             bce_loss=torch.nn.BCEWithLogitsLoss()
+            trainable_models.append(pixel_discriminator)
+            trainable_models.append(fmri_discriminator)
+
+
         for batch in train_loader:
             break
 
@@ -225,7 +239,7 @@ def main(args):
             for k,batch in enumerate(train_loader):
                 if k==args.train_limit:
                     break
-                with accelerator.accumulate():
+                with accelerator.accumulate(*trainable_models):
                     if e %args.validation_interval==0 and random.random() < args.val_split:
                         validation_set.append(batch)
                         continue
@@ -310,7 +324,7 @@ def main(args):
                 for k,images in enumerate(unpaired_loader):
                     if k==args.train_limit:
                         break
-                    with accelerator.accumulate():
+                    with accelerator.accumulate(pixel_to_fmri,fmri_to_pixel,pixel_discriminator):
                         images=images.to(device,torch_dtype)
 
                         if args.use_discriminator:
