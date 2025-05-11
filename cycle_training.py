@@ -239,6 +239,7 @@ def main(args):
             for k,batch in enumerate(train_loader):
                 if k==args.train_limit:
                     break
+                batch_size=batch.size()[0]
                 with accelerator.accumulate(*trainable_models):
                     if e %args.validation_interval==0 and random.random() < args.val_split:
                         validation_set.append(batch)
@@ -259,7 +260,7 @@ def main(args):
                             trainable_model.requires_grad_(False)
                             disc_optimizer.zero_grad()
 
-                            true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
+                            true_labels=torch.ones((batch_size)).to(device,torch_dtype)
                             '''translated_data=trainable_model(data)
                             reconstructed_data=frozen_model(translated_data)'''
                             predicted_labels=disc(input_data).squeeze(1)
@@ -269,7 +270,7 @@ def main(args):
 
 
                             #train disc fake batch
-                            fake_labels=torch.zeros((args.batch_size)).to(device,torch_dtype)
+                            fake_labels=torch.zeros((batch_size)).to(device,torch_dtype)
                             translated_data=trainable_model(input_data)
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data).squeeze(1)
@@ -283,7 +284,7 @@ def main(args):
                             gen_optimizer.zero_grad()
                             disc.requires_grad_(False)
                             trainable_model.requires_grad_(True)
-                            true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
+                            true_labels=torch.ones((batch_size)).to(device,torch_dtype)
                             translated_data=trainable_model(input_data)
                             reconstructed_data=frozen_model(translated_data)
                             predicted_labels=disc(reconstructed_data).squeeze(1)
@@ -324,6 +325,7 @@ def main(args):
                 for k,images in enumerate(unpaired_loader):
                     if k==args.train_limit:
                         break
+                    batch_size=images.size()[0]
                     with accelerator.accumulate(pixel_to_fmri,fmri_to_pixel,pixel_discriminator):
                         images=images.to(device,torch_dtype)
 
@@ -338,7 +340,7 @@ def main(args):
                                 trainable_model.requires_grad_(False)
                                 disc_optimizer.zero_grad()
 
-                                true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
+                                true_labels=torch.ones((batch_size)).to(device,torch_dtype)
                                 '''translated_data=trainable_model(data)
                                 reconstructed_data=frozen_model(translated_data)'''
                                 predicted_labels=disc(input_data).squeeze(1)
@@ -348,7 +350,7 @@ def main(args):
 
 
                                 #train disc fake batch
-                                fake_labels=torch.zeros((args.batch_size)).to(device,torch_dtype)
+                                fake_labels=torch.zeros((batch_size)).to(device,torch_dtype)
                                 translated_data=trainable_model(input_data)
                                 reconstructed_data=frozen_model(translated_data)
                                 predicted_labels=disc(reconstructed_data).squeeze(1)
@@ -362,7 +364,7 @@ def main(args):
                                 gen_optimizer.zero_grad()
                                 disc.requires_grad_(False)
                                 trainable_model.requires_grad_(True)
-                                true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
+                                true_labels=torch.ones((batch_size)).to(device,torch_dtype)
                                 translated_data=trainable_model(input_data)
                                 reconstructed_data=frozen_model(translated_data)
                                 predicted_labels=disc(reconstructed_data).squeeze(1)
@@ -391,6 +393,7 @@ def main(args):
             if len(validation_set)!=0:
                 with torch.no_grad():
                     for batch in validation_set:
+                        batch_size=batch.size()[0]
                         fmri=batch["fmri"].to(device,torch_dtype)
                         images=batch["image"].to(device,torch_dtype)
                         #labels=batch["labels"]
@@ -403,7 +406,7 @@ def main(args):
                                 trainable_model.requires_grad_(False)
                                 disc.requires_grad_(False)
 
-                                true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
+                                true_labels=torch.ones((batch_size)).to(device,torch_dtype)
                                 '''translated_data=trainable_model(input_data)
                                 reconstructed_data=frozen_model(translated_data)'''
                                 predicted_labels=disc(input_data).squeeze(1)
@@ -412,7 +415,7 @@ def main(args):
 
 
                                 #train disc fake batch
-                                fake_labels=torch.zeros((args.batch_size)).to(device,torch_dtype)
+                                fake_labels=torch.zeros((batch_size)).to(device,torch_dtype)
                                 translated_data=trainable_model(input_data)
                                 reconstructed_data=frozen_model(translated_data)
                                 predicted_labels=disc(reconstructed_data).squeeze(1)
@@ -421,7 +424,7 @@ def main(args):
 
 
                                 #train gen
-                                true_labels=torch.ones((args.batch_size)).to(device,torch_dtype)
+                                true_labels=torch.ones((batch_size)).to(device,torch_dtype)
                                 translated_data=trainable_model(input_data)
                                 reconstructed_data=frozen_model(translated_data)
                                 predicted_labels=disc(reconstructed_data).squeeze(1)
@@ -508,6 +511,7 @@ def main(args):
             for k,batch in enumerate(test_loader):
                 if k==args.test_limit:
                     break
+                batch_size=batch.size()[0]
                 fmri=batch["fmri"].to(device,torch_dtype)
                 images=batch["image"].to(device,torch_dtype)
                 #labels=batch["labels"]
