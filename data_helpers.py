@@ -28,7 +28,10 @@ def pad_to_128(x):
 class UnpairedImageDataset(Dataset):
     def __init__(self,hf_dataset_path,key,transform=None,force_download=False):
         super().__init__()
-        data=load_dataset(hf_dataset_path,split="train",force_download=force_download)
+        if force_download:
+            data=load_dataset(hf_dataset_path,split="train",download_mode="force_redownload")
+        else:
+            data=load_dataset(hf_dataset_path,split="train")
         self.images=[np.transpose(np.array(row[key]).astype(np.float32),(2,0,1) )  for row in data]
         self.transform=transform
 
