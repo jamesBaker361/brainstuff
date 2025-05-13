@@ -189,6 +189,10 @@ def main(args):
                 unpaired_dataset=UnpairedImageDataset(args.unpaired_image_dataset,args.key,transform=transform)
             except OSError:
                 time.sleep(5+20*random.random())
+                try:
+                    unpaired_dataset=UnpairedImageDataset(args.unpaired_image_dataset,args.key,transform=transform)
+                except OSError:
+                    unpaired_dataset=UnpairedImageDataset(args.unpaired_image_dataset,args.key,transform=transform,force_download=True)
             unpaired_loader=DataLoader(unpaired_dataset,batch_size=args.batch_size,shuffle=True)
 
         train_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
