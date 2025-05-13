@@ -166,10 +166,10 @@ np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_cap_su
 
 print("Caption data are saved.")'''
 save_path = os.environ["BRAIN_DATA_DIR"]+f"/subj{sub:02d}_fmriflattened_stim_paired.npz"
-'''np.savez_compressed(
+np.savez_compressed(
     save_path,
     fmri_train=fmri_train,
     stim_train=stim_train,
     fmri_test=fmri_test,
     stim_test=stim_test
-)'''
+)
