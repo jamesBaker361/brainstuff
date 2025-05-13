@@ -18,5 +18,5 @@ for pairing in ["unpaired","paired"]:
                     pass
                 else:
                     print(command)
-                    print("sleep 10 ")
+                    print("sleep 1 ")
         print("")
