@@ -185,7 +185,10 @@ def main(args):
         test_dataset=BrainImageSubjectDataset(test_fmri,test_img,test_labels,args.fmri_type,transform=transform)
 
         if args.unpaired_image_dataset!="":
-            unpaired_dataset=UnpairedImageDataset(args.unpaired_image_dataset,args.key,transform=transform)
+            try:
+                unpaired_dataset=UnpairedImageDataset(args.unpaired_image_dataset,args.key,transform=transform)
+            except OSError:
+                time.sleep(5+20*random.random())
             unpaired_loader=DataLoader(unpaired_dataset,batch_size=args.batch_size,shuffle=True)
 
         train_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
