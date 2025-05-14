@@ -18,7 +18,7 @@
 
 #SBATCH --error=slurm/err/%j.err   # STDERR output file (optional)
 
-#SBATCH --exclude=halk[0051,0057,0069,0071,0076,0105,0055,0066-0067]
+#SBATCH --exclude=halk[0001-0106]
 
 day=$(date +'%m/%d/%Y %R')
 echo "main" ${day} $SLURM_JOBID "node_list" $SLURM_NODELIST $@  "\n" >> jobs.txt
