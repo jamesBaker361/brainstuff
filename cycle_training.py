@@ -37,6 +37,7 @@ parser.add_argument("--test_limit",type=int,help="limit # of testing batches",de
 parser.add_argument("--translation_loss",action="store_true")
 parser.add_argument("--reconstruction_loss",action="store_true")
 parser.add_argument("--validation_interval",type= int,default=1)
+parser.add_argument("--residual_blocks",type=int,default=2)
 
 def concat_images_horizontally(*imgs: Image.Image) -> Image.Image:
     """
@@ -198,8 +199,8 @@ def main(args):
         train_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
-        pixel_to_fmri=PixelVoxelArrayModel(image_size,fmri_size,args.n_layers,args.n_layers_trans,"pixel",args.fmri_type,args.kernel_size,2)
-        fmri_to_pixel=PixelVoxelArrayModel(fmri_size,image_size,args.n_layers,args.n_layers_trans,args.fmri_type,"pixel",args.kernel_size,2)
+        pixel_to_fmri=PixelVoxelArrayModel(image_size,fmri_size,args.n_layers,args.n_layers_trans,"pixel",args.fmri_type,args.kernel_size,2,args.residual_blocks)
+        fmri_to_pixel=PixelVoxelArrayModel(fmri_size,image_size,args.n_layers,args.n_layers_trans,args.fmri_type,"pixel",args.kernel_size,2,args.residual_blocks)
 
         ptof_optimizer=torch.optim.AdamW([p for p in pixel_to_fmri.parameters()])
         ftop_optimizer=torch.optim.AdamW([p for p in fmri_to_pixel.parameters()])
