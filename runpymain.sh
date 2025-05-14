@@ -18,6 +18,8 @@
 
 #SBATCH --error=slurm/err/%j.err   # STDERR output file (optional)
 
+#SBATCH --exclude=halk[0000-9999]
+
 day=$(date +'%m/%d/%Y %R')
 echo "main" ${day} $SLURM_JOBID "node_list" $SLURM_NODELIST $@  "\n" >> jobs.txt
 module purge
