@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from functools import reduce
 import operator
+from deep_modeling import ArrayBlock, PixelBlock
 
 def compute_input_size_1d(output_size, n_layers, factor):
     dim=output_size[-1]
@@ -85,11 +86,13 @@ class PixelVoxelArrayModel(nn.Module):
         for _ in range(n_layers):
             in_channels=shape[0]
             if input_modality=="array":
+                down_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
                 out_channels=in_channels//2
                 down_layer_list.append(down_layer(in_channels,out_channels))
                 shape=[out_channels]
             else:
                 out_channels=in_channels*2
+                down_layer_list.append(PixelBlock(in_channels,in_channels//2,in_channels,True))
                 down_layer_list.append(down_layer(in_channels,out_channels,kernel_size,stride,padding=padding))
                 shape=(out_channels, *[d//2 for d in shape[1:]])
             down_layer_list.append(nn.LeakyReLU())
@@ -120,11 +123,15 @@ class PixelVoxelArrayModel(nn.Module):
             up_layer_list.append(nn.LeakyReLU())
             if output_modality=="array":
                 in_channels=out_channels//2
+                
                 up_layer_list.append(up_layer(in_channels,out_channels))
+                up_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
                 shape=[in_channels]
             else:
                 in_channels=out_channels*2
+                up_layer_list.append(PixelBlock(out_channels,out_channels//2, out_channels,True))
                 up_layer_list.append(up_layer(in_channels,out_channels,factor,factor))
+                
                 shape=(in_channels, *[d//2 for d in shape[1:]])
             print("up layer shape",shape)
         initial_up_shape=1
@@ -152,7 +159,6 @@ class PixelVoxelArrayModel(nn.Module):
 
         print("intermediate zero input",zero_input.size())
 
-        print(up_layer_list)
         for layer in up_layer_list:
             zero_input=layer(zero_input)
 
