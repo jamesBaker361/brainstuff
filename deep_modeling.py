@@ -31,6 +31,7 @@ class PixelBlock(nn.Module):
         self.in_channels=in_channels
         self.middle_channels=middle_channels
         self.out_channels=out_channels
+        self.module_list=nn.ModuleList([self.c1,self.c2,self.c3,self.c4])
 
     def forward(self, x):
         xhat = self.c1(F.gelu(x))
@@ -48,6 +49,7 @@ class ArrayBlock(nn.Module):
         self.c2=nn.Linear(middle_features,middle_features)
         self.c3=nn.Linear(middle_features,middle_features)
         self.c4=nn.Linear(middle_features,out_features)
+        self.module_list=nn.ModuleList([self.c1,self.c2,self.c3,self.c4])
 
     def forward(self, x):
         xhat = self.c1(F.gelu(x))
