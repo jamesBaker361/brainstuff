@@ -210,8 +210,8 @@ def main(args):
         trainable_models=[pixel_to_fmri,fmri_to_pixel]
 
         if args.use_discriminator:
-            pixel_discriminator=Discriminator(image_size,args.n_layers_disc,"pixel",args.kernel_size,2)
-            fmri_discriminator=Discriminator(fmri_size,args.n_layers_disc,args.fmri_type,args.kernel_size,2)
+            pixel_discriminator=Discriminator(image_size,args.n_layers_disc,"pixel",args.kernel_size,2,args.residual_blocks)
+            fmri_discriminator=Discriminator(fmri_size,args.n_layers_disc,args.fmri_type,args.kernel_size,2,args.residual_blocks)
 
             pdisc_optimizer=torch.optim.AdamW([p for p in pixel_discriminator.parameters()])
             fmridisc_optimizer=torch.optim.AdamW([p for p in fmri_discriminator.parameters()])
