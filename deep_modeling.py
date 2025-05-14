@@ -20,11 +20,9 @@ def get_3x3(in_dim, out_dim, zero_bias=True, zero_weights=False, groups=1, scale
 
 def get_1x1(in_dim, out_dim, zero_bias=True, zero_weights=False, groups=1, scaled=False):
     return get_conv(in_dim, out_dim, 1, 1, 0, zero_bias, zero_weights, groups=groups, scaled=scaled)
-
 class PixelBlock(nn.Module):
-    def __init__(self, in_channels, middle_channels, out_channels, down_rate=None, residual=False, use_3x3=True, zero_last=False):
+    def __init__(self, in_channels, middle_channels, out_channels,  residual=False, use_3x3=True, zero_last=False):
         super().__init__()
-        self.down_rate = down_rate
         self.residual = residual
         self.c1 = get_1x1(in_channels, middle_channels)
         self.c2 = get_3x3(middle_channels, middle_channels) if use_3x3 else get_1x1(middle_channels, middle_channels)
@@ -40,8 +38,6 @@ class PixelBlock(nn.Module):
         xhat = self.c3(F.gelu(xhat))
         xhat = self.c4(F.gelu(xhat))
         out = x + xhat if self.residual else xhat
-        if self.down_rate is not None:
-            out = F.avg_pool2d(out, kernel_size=self.down_rate, stride=self.down_rate)
         return out
     
 class ArrayBlock(nn.Module):

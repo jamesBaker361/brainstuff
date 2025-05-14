@@ -32,7 +32,6 @@ class ReshapeLayer(nn.Module):
     def forward(self,x):
         batch_size=x.size()[0]
         return x.reshape(batch_size, *self.dim)
-
 class PixelVoxelArrayModel(nn.Module):
     def __init__(self,
                  input_dim,
@@ -43,10 +42,12 @@ class PixelVoxelArrayModel(nn.Module):
                   output_modality:str, #one of voxel or pixel or array
                   kernel_size:int,
                   factor:int,
+                 residual_blocks:int,
                     *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.input_dim=input_dim
         self.output_dim=output_dim
+        self.residual_blocks=residual_blocks
 
         
         
@@ -86,13 +87,17 @@ class PixelVoxelArrayModel(nn.Module):
         for _ in range(n_layers):
             in_channels=shape[0]
             if input_modality=="array":
-                down_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
+                for _ in range(residual_blocks):
+                  down_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
+                  down_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
                 out_channels=in_channels//2
                 down_layer_list.append(down_layer(in_channels,out_channels))
                 shape=[out_channels]
             else:
                 out_channels=in_channels*2
-                down_layer_list.append(PixelBlock(in_channels,in_channels//2,in_channels,True))
+                for _ in range(residual_blocks):
+                  down_layer_list.append(PixelBlock(in_channels,in_channels//2,in_channels,True))
+                  down_layer_list.append(PixelBlock(in_channels,in_channels//2,in_channels,True))
                 down_layer_list.append(down_layer(in_channels,out_channels,kernel_size,stride,padding=padding))
                 shape=(out_channels, *[d//2 for d in shape[1:]])
             down_layer_list.append(nn.LeakyReLU())
@@ -125,12 +130,17 @@ class PixelVoxelArrayModel(nn.Module):
                 in_channels=out_channels//2
                 
                 up_layer_list.append(up_layer(in_channels,out_channels))
-                up_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
+                for _ in range(residual_blocks):
+                  up_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
+                  up_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
                 shape=[in_channels]
             else:
                 in_channels=out_channels*2
-                up_layer_list.append(PixelBlock(out_channels,out_channels//2, out_channels,True))
+                
                 up_layer_list.append(up_layer(in_channels,out_channels,factor,factor))
+                for _ in range(residual_blocks):
+                  up_layer_list.append(PixelBlock(in_channels,in_channels//2, in_channels,True))
+                  up_layer_list.append(PixelBlock(in_channels,in_channels//2, in_channels,True))
                 
                 shape=(in_channels, *[d//2 for d in shape[1:]])
             print("up layer shape",shape)
@@ -179,6 +189,7 @@ class Discriminator(nn.Module):
                   input_modality:str, #one of voxel or pixel or array
                   kernel_size:int,
                   factor:int,
+                  residual_blocks:int,
                     *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.input_dim=input_dim
@@ -203,9 +214,14 @@ class Discriminator(nn.Module):
         for _ in range(n_layers):
             if input_modality=="pixel" or input_modality=="voxel":
                 out_channels=in_channels*2
+                for _ in range(residual_blocks):
+                    layers.append(PixelBlock(in_channels,in_channels//2,in_channels,True))
                 layers.append(down_layer(in_channels,out_channels,kernel_size,stride,padding=padding))
             else:
+
                 out_channels=in_channels//2
+                for _ in range(residual_blocks):
+                    layers.append(ArrayBlock(in_channels,in_channels//2,in_channels,True))
                 layers.append(down_layer(in_channels,out_channels))
             layers.append(norm(out_channels))
             layers.append(nn.LeakyReLU())
