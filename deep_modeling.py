@@ -58,3 +58,4 @@ class ArrayBlock(nn.Module):
         xhat = self.c4(F.gelu(xhat))
         out = x + xhat if self.residual else xhat
         return out
+    
