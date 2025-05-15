@@ -2,7 +2,6 @@ compute_environment: LOCAL_MACHINE
 debug: true
 deepspeed_config:
   deepspeed_config_file: ds_config.json
-  deepspeed_moe_layer_cls_names: ''
   zero3_init_flag: true
 distributed_type: DEEPSPEED
 downcast_bf16: 'no'
