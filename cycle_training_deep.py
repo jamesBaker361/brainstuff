@@ -238,7 +238,10 @@ def main(args):
         for batch in train_loader:
             break
 
-        model,optimizer,train_loader,test_loader=accelerator.prepare(model,optimizer,train_loader,test_loader)
+        if args.unpaired_image_dataset!="":
+            model,optimizer,train_loader,test_loader,unpaired_loader=accelerator.prepare(model,optimizer,train_loader,test_loader,unpaired_loader)
+        else:
+            model,optimizer,train_loader,test_loader=accelerator.prepare(model,optimizer,train_loader,test_loader)
         
 
         with torch.no_grad():
