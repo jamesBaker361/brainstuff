@@ -31,7 +31,7 @@ echo "gpu"  ${day} $SLURM_JOBID "node_list" $SLURM_NODELIST $@  "\n" >> jobs.txt
 module purge
 module load intel/17.0.4
 #module load cudnn/7.0.3
-module load cuda/11.3
+module load cuda/12.1.0
 eval "$(conda shell.bash hook)"
 conda activate deephands
 export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:64
