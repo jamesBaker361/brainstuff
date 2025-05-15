@@ -31,6 +31,7 @@ echo "gpu"  ${day} $SLURM_JOBID "node_list" $SLURM_NODELIST $@  "\n" >> jobs.txt
 module purge
 module load intel/17.0.4
 #module load cudnn/7.0.3
+module load gcc/8.1.0-sp1779
 module load cuda/12.1.0
 eval "$(conda shell.bash hook)"
 conda activate deephands
