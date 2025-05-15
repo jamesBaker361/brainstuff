@@ -34,6 +34,7 @@ module load intel/17.0.4
 #module load cudnn/7.0.3
 module load gcc/10.3.0-pgarias
 module load cuda/12.1.0
+gcc --version
 eval "$(conda shell.bash hook)"
 conda activate deephands
 export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:64
