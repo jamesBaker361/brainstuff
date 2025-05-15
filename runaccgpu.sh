@@ -22,6 +22,8 @@
 
 #SBATCH --exclusive 
 
+#SBATCH --exclude=gpu[005,006,011],cuda[001-008],pascal[006-010],gpuk[001-012]
+
 day=$(date +'%m/%d/%Y %R')
 echo "gpu"  ${day} $SLURM_JOBID "node_list" $SLURM_NODELIST $@  "\n" >> jobs.txt
 module purge
