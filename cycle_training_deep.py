@@ -16,6 +16,15 @@ from PIL import Image
 import torchvision
 from metric_helpers import pixelwise_corr_from_pil,clip_difference
 
+
+for i in range(torch.cuda.device_count()):
+    try:
+        torch.cuda.set_device(i)
+        torch.cuda.empty_cache()
+        torch.cuda.memory_allocated(i)
+    except RuntimeError as e:
+        print(f"[WARN] GPU {i} has a problem: {e}")
+
 parser=argparse.ArgumentParser()
 parser.add_argument("--mixed_precision",type=str,default="fp16")
 parser.add_argument("--project_name",type=str,default="person")
