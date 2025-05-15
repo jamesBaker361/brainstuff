@@ -301,7 +301,7 @@ def main(args):
                             optimizer.zero_grad()
                             fake_labels=torch.zeros((batch_size)).to(device,torch_dtype)
                             translated_data=trainable_model(input_data)
-                            reconstructed_data=frozen_model(translated_data)
+                            reconstructed_data=frozen_model(translated_data).detach()
                             predicted_labels=disc(reconstructed_data).squeeze(1)
                             d_loss_fake=bce_loss(predicted_labels,fake_labels)
                             accelerator.backward(d_loss_fake)
