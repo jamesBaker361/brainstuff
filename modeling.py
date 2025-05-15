@@ -181,6 +181,13 @@ class PixelVoxelArrayModel(nn.Module):
         for layer in self.module_list:
             x=layer(x)
         return x
+    
+class FusedModel(nn.Module):
+    def __init__(self, pixel_to_fmri,fmri_to_pixel,pixel_discriminator=None,fmri_discriminator=None):
+        self.pixel_to_fmri=pixel_to_fmri
+        self.fmri_to_pixel=fmri_to_pixel
+        self.pixel_discriminator=pixel_discriminator
+        self.fmri_discriminator=fmri_discriminator
 
 class Discriminator(nn.Module):
     def __init__(self,
