@@ -22,7 +22,7 @@
 
 #SBATCH --exclusive 
 
-#SBATCH --exclude=gpu[005,006,011],cuda[001-008],pascal[006-010],gpuk[001-012]
+#SBATCH --exclude=gpu[005,006,011,018],cuda[001-008],pascal[006-010],gpuk[001-012]
 
 #SBATCH --gres-flags=enforce-binding
 
@@ -54,6 +54,8 @@ export BRAIN_DATA_DIR="/scratch/jlb638/brain/data"
 echo "Running on: $(hostname)"
 echo "Allocated GPUs:"
 nvidia-smi
+echo "version"
+nvcc --version
 srun accelerate launch  $@
 conda deactivate
 echo "Running on: $(hostname)"
