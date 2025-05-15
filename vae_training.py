@@ -213,7 +213,7 @@ def main(args):
 
         from sklearn.decomposition import PCA
 
-        pca = PCA(n_components=1)
+        pca = PCA(n_components=0.95)
         pca.fit(train_fmri)
         important_features = np.argsort(np.abs(pca.components_[0]))
 
