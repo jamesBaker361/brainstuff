@@ -20,6 +20,8 @@
 
 #SBATCH --error=slurm/generic/%j.err   # STDERR output file (optional)
 
+#SBATCH --exclusive 
+
 day=$(date +'%m/%d/%Y %R')
 echo "gpu"  ${day} $SLURM_JOBID "node_list" $SLURM_NODELIST $@  "\n" >> jobs.txt
 module purge
