@@ -295,6 +295,7 @@ def main(args):
                             accelerator.backward(d_loss_real)
                             train_loss_dict[real_key].append(d_loss_real.cpu().detach().item())
                             optimizer.step()
+                            #torch.cuda.empty_cache()
 
 
                             #train disc fake batch
