@@ -26,6 +26,8 @@ for i in range(torch.cuda.device_count()):
     except RuntimeError as e:
         print(f"[WARN] GPU {i} has a problem: {e}")
 
+torch.cuda.empty_cache()
+
 parser=argparse.ArgumentParser()
 parser.add_argument("--mixed_precision",type=str,default="fp16")
 parser.add_argument("--project_name",type=str,default="person")
