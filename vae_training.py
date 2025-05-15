@@ -153,7 +153,7 @@ def main(args):
 
         def convert_datatype(x):
             return x.to(torch_dtype)
-        
+        '''
         class CenterCropSquare:
             def __call__(self, img):
                 # img can be PIL Image or Tensor [C, H, W]
@@ -209,7 +209,17 @@ def main(args):
             unpaired_loader=DataLoader(unpaired_dataset,batch_size=args.batch_size,shuffle=True)
 
         train_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
-        test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
+        test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)'''
+
+        from sklearn.decomposition import PCA
+
+        pca = PCA(n_components=1)
+        pca.fit(train_fmri)
+        important_features = np.argsort(np.abs(pca.components_[0]))
+
+        print("len",len(important_features))
+        print(important_features[-10:])
+
 
         
 
