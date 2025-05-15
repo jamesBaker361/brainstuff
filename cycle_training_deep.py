@@ -397,9 +397,9 @@ def main(args):
 
                         if args.reconstruction_loss:
 
-                            for trainable_model,frozen_model,optimizer,data,key in [
+                            for trainable_model,frozen_model,data,key in [
                                 #[fmri_to_pixel,pixel_to_fmri,optimizer,fmri,"vtop_reconstruction_loss"],
-                                [pixel_to_fmri,fmri_to_pixel,optimizer,images,"ptov_reconstruction_loss"]]:
+                                [pixel_to_fmri,fmri_to_pixel,images,"ptov_reconstruction_loss"]]:
                                 trainable_model.requires_grad_(True)
                                 frozen_model.requires_grad_(False)
                                 optimizer.zero_grad()
