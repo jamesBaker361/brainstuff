@@ -184,6 +184,7 @@ class PixelVoxelArrayModel(nn.Module):
     
 class FusedModel(nn.Module):
     def __init__(self, pixel_to_fmri,fmri_to_pixel,pixel_discriminator=None,fmri_discriminator=None):
+        super().__init__()
         self.pixel_to_fmri=pixel_to_fmri
         self.fmri_to_pixel=fmri_to_pixel
         self.pixel_discriminator=pixel_discriminator
