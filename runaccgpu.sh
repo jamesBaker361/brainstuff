@@ -53,3 +53,6 @@ export SCIKIT_LEARN_DATA="/scratch/jlb638/scikit-learn-data"
 export BRAIN_DATA_DIR="/scratch/jlb638/brain/data"
 srun accelerate launch  $@
 conda deactivate
+echo "Running on: $(hostname)"
+echo "Allocated GPUs:"
+nvidia-smi
