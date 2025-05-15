@@ -231,7 +231,7 @@ def main(args):
 
         optimizer=torch.optim.AdamW(
             [
-                {"params": model.parameters(), "lr": 0.001} for model in trainable_models
+                {"params": model.parameters(), "lr": 0.0001} for model in trainable_models
             ]
         )
 
