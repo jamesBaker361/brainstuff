@@ -51,6 +51,9 @@ export BRAIN_DATA_DIR='/scratch/jlb638/brain-diffuser/data'
 export CUDA_LAUNCH_BLOCKING="1"
 export SCIKIT_LEARN_DATA="/scratch/jlb638/scikit-learn-data"
 export BRAIN_DATA_DIR="/scratch/jlb638/brain/data"
+echo "Running on: $(hostname)"
+echo "Allocated GPUs:"
+nvidia-smi
 srun accelerate launch  $@
 conda deactivate
 echo "Running on: $(hostname)"
