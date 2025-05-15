@@ -211,8 +211,8 @@ def main(args):
         pixel_to_fmri=PixelVoxelArrayModel(image_size,fmri_size,args.n_layers,args.n_layers_trans,"pixel",args.fmri_type,args.kernel_size,2,args.residual_blocks)
         fmri_to_pixel=PixelVoxelArrayModel(fmri_size,image_size,args.n_layers,args.n_layers_trans,args.fmri_type,"pixel",args.kernel_size,2,args.residual_blocks)
 
-        pixel_to_fmri=pixel_to_fmri.to(device)
-        fmri_to_pixel=fmri_to_pixel.to(device)
+        #pixel_to_fmri=pixel_to_fmri.to(device)
+        #fmri_to_pixel=fmri_to_pixel.to(device)
 
         ptof_optimizer=torch.optim.AdamW([p for p in pixel_to_fmri.parameters()])
         ftop_optimizer=torch.optim.AdamW([p for p in fmri_to_pixel.parameters()])
