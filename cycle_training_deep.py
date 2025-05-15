@@ -294,9 +294,11 @@ def main(args):
                             d_loss_real=bce_loss(predicted_labels,true_labels)
                             accelerator.backward(d_loss_real)
                             train_loss_dict[real_key].append(d_loss_real.cpu().detach().item())
+                            optimizer.step()
 
 
                             #train disc fake batch
+                            optimizer.zero_grad()
                             fake_labels=torch.zeros((batch_size)).to(device,torch_dtype)
                             translated_data=trainable_model(input_data)
                             reconstructed_data=frozen_model(translated_data)
@@ -374,9 +376,11 @@ def main(args):
                                 d_loss_real=bce_loss(predicted_labels,true_labels)
                                 accelerator.backward(d_loss_real)
                                 unpaired_train_loss_dict[real_key].append(d_loss_real.cpu().detach().item())
+                                optimizer.step()
 
 
                                 #train disc fake batch
+                                optimizer.zero_grad()
                                 fake_labels=torch.zeros((batch_size)).to(device,torch_dtype)
                                 translated_data=trainable_model(input_data)
                                 reconstructed_data=frozen_model(translated_data)
