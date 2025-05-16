@@ -245,28 +245,28 @@ def main(args):
                         reconstructed_images=model(fmri)
                         loss=F.mse_loss(images,reconstructed_images)
                         val_loss_list.append(loss.cpu().detach().item())
-                metrics["val_loss"]=np.mean(val_loss_list)
-                for batch in validation_set:
-                    fmri=batch["fmri"].to(device,torch_dtype)
-                    images=batch["image"].to(device,torch_dtype)
-                    break
-                reconstructed_images=model(fmri)
+                    metrics["val_loss"]=np.mean(val_loss_list)
+                    for batch in validation_set:
+                        fmri=batch["fmri"].to(device,torch_dtype)
+                        images=batch["image"].to(device,torch_dtype)
+                        break
+                    reconstructed_images=model(fmri)
 
-                reconstructed_image_list=[]
-                image_list=[]
+                    reconstructed_image_list=[]
+                    image_list=[]
 
-                for img_data,data_list in zip([images,reconstructed_images],
-                                        [image_list,reconstructed_image_list]):
-                    img_np=img_data.cpu().permute(0, 2, 3, 1).float().numpy()
-                    img_np=img_np*255
-                    img_np=img_np.round().astype(np.uint8)
-                    for i in img_np:
-                        data_list.append(Image.fromarray(i))
+                    for img_data,data_list in zip([images,reconstructed_images],
+                                            [image_list,reconstructed_image_list]):
+                        img_np=img_data.cpu().permute(0, 2, 3, 1).float().numpy()
+                        img_np=img_np*255
+                        img_np=img_np.round().astype(np.uint8)
+                        for i in img_np:
+                            data_list.append(Image.fromarray(i))
 
-                for k,(real,translated,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
-                    concat=concat_images_horizontally(real,translated,reconstructed)
-                    #accelerator.log({"val_result":wandb.Image(concat)})
-                    metrics[f"val_result_{k}"]=wandb.Image(concat)
+                    for k,(real,translated,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
+                        concat=concat_images_horizontally(real,translated,reconstructed)
+                        #accelerator.log({"val_result":wandb.Image(concat)})
+                        metrics[f"val_result_{k}"]=wandb.Image(concat)
             accelerator.log(metrics)
         #testing
         reconstructed_image_list=[]
