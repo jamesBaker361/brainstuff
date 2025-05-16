@@ -87,6 +87,8 @@ def main(args):
     }[args.mixed_precision]
     with accelerator.autocast():
 
+        print("torch dtype",torch_dtype)
+
         train_fmri=[]
         train_img=[]
         train_labels=[]
@@ -205,9 +207,9 @@ def main(args):
         model=model.to(device).to(torch_dtype)
 
         # If using torch_dtype=torch.float16, also convert manually:
-        if torch_dtype == torch.float16:
+        '''if torch_dtype == torch.float16:
             for p in model.parameters():
-                p.data = p.data.half()
+                p.data = p.data.half()'''
 
         optimizer=torch.optim.AdamW([p for p in model.parameters()],0.0001)
 
