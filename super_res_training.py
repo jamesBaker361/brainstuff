@@ -15,7 +15,8 @@ import wandb
 from PIL import Image
 import torchvision
 from metric_helpers import pixelwise_corr_from_pil,clip_difference
-
+from sklearn.decomposition import PCA
+import joblib
 
 
 for i in range(torch.cuda.device_count()):
@@ -41,7 +42,6 @@ parser.add_argument("--n_layers_disc",type=int,default=4)
 parser.add_argument("--epochs",type=int,default=10)
 parser.add_argument("--use_discriminator",action="store_true")
 parser.add_argument("--sublist",nargs="*",type=int)
-parser.add_argument("--fmri_type",type=str,default="voxel",help="array or voxel")
 parser.add_argument("--unpaired_image_dataset",type=str,default="",help="hf path for unpaired images")
 parser.add_argument("--key",type=str,default="image",help="image key if using unpaired images")
 parser.add_argument("--train_limit",type=int,default=-1,help="limit # of training batches")
@@ -107,10 +107,7 @@ def main(args):
         else:
             sublist=args.sublist
         for sub in sublist:
-            fmri_suffix={
-                "array":"flattened",
-                "voxel":""
-            }[args.fmri_type]
+            fmri_suffix="flattened"
             path=os.environ["BRAIN_DATA_DIR"]+f"/subj{sub:02d}_fmri{fmri_suffix}_stim_paired.npz"
             npz_loaded=np.load(path,allow_pickle=True)
             subject_fmri_train=npz_loaded["fmri_train"]
@@ -147,9 +144,15 @@ def main(args):
         train_img=[np.transpose(i, (2,0,1)) for i in train_img]
         test_img=[np.transpose(i, (2,0,1)) for i in test_img]
 
-        if args.fmri_type=="voxel":
-            train_fmri=[np.expand_dims(f,0) for f in train_fmri]
-            test_fmri=[np.expand_dims(f,0) for f in test_fmri]
+        pca = joblib.load(os.path.join(os.environ["BRAIN_DATA_DIR"],"pca",f"subj{sub:02d}_fmri.pkl"))
+
+        train_fmri=pca.transform(train_fmri)
+        test_fmri=pca.transform(train_fmri)
+
+        print('train_fmri.shape,test_fmri.shape',train_fmri.shape,test_fmri.shape)
+
+        train_fmri=[np.array(row).reshape(256,4,4) for row in train_fmri]
+        test_fmri=[np.array(row).reshape(256,4,4) for row in test_fmri]
 
         def convert_datatype(x):
             return x.to(torch_dtype)
@@ -211,7 +214,7 @@ def main(args):
         train_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
-        
+
 
 
 if __name__=='__main__':
