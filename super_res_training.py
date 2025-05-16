@@ -288,7 +288,14 @@ def main(args):
 
             for k,(real,translated,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
                 concat=concat_images_horizontally(real,translated,reconstructed)
-        
+            reconstructed_clip=np.mean(clip_difference(image_list,reconstructed_image_list))
+
+            metrics={
+                "test_loss":np.mean(test_loss_list),
+                "clip_difference":reconstructed_clip
+            }
+            print(metrics)
+            accelerator.log(metrics)
                 
 
 
