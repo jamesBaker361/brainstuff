@@ -6,6 +6,17 @@ from deep_modeling import ArrayBlock, PixelBlock
 import torch
 import torch.nn as nn
 from transformers import GPT2Model, GPT2Tokenizer, GPT2Config
+from transformers import LlamaForCausalLM, LlamaTokenizer
+
+class CrossAttentionBlock(nn.Module):
+    def __init__(self, embed_dim, num_heads):
+        super().__init__()
+        self.cross_attn = nn.MultiheadAttention(embed_dim, num_heads, batch_first=True)
+        self.norm = nn.LayerNorm(embed_dim)
+
+    def forward(self, x, context):
+        attn_out, _ = self.cross_attn(x, context, context)
+        return self.norm(x + attn_out)
 
 class FMRIConditionedGPT2(nn.Module):
     def __init__(self, fmri_dim=128, model_name='gpt2', num_cross_layers=4):
@@ -37,15 +48,48 @@ class FMRIConditionedGPT2(nn.Module):
 
         return hidden_states
 
-class CrossAttentionBlock(nn.Module):
-    def __init__(self, embed_dim, num_heads):
-        super().__init__()
-        self.cross_attn = nn.MultiheadAttention(embed_dim, num_heads, batch_first=True)
-        self.norm = nn.LayerNorm(embed_dim)
 
-    def forward(self, x, context):
-        attn_out, _ = self.cross_attn(x, context, context)
-        return self.norm(x + attn_out)
+from transformers import LlamaForCausalLM, LlamaTokenizer
+
+class FMRIConditionedLLaMA(nn.Module):
+    def __init__(self, model_name="meta-llama/Llama-2-7b-hf", fmri_dim=128, num_cross_layers=-1):
+        super().__init__()
+        self.model = LlamaForCausalLM.from_pretrained(model_name)
+        self.config = self.model.config
+
+        self.fmri_proj = nn.Linear(fmri_dim, self.config.hidden_size)
+        self.cross_layers = nn.ModuleList()
+
+        for i in range(self.config.num_hidden_layers):
+            if i==num_cross_layers:
+                break
+            self.cross_layers.append(CrossAttentionBlock(self.config.hidden_size, self.config.num_attention_heads))
+            
+        print(f"added {len(self.cross_layers)} cross_layers")
+        self._insert_cross_attn_hooks()
+
+    def _insert_cross_attn_hooks(self):
+        for i, block in enumerate(self.model.model.layers):
+            if self.cross_layers[i] is not None:
+                old_forward = block.forward
+
+                def make_forward(old_forward, cross_attn):
+                    def new_forward(*args, **kwargs):
+                        hidden_states = args[0]
+                        outputs = old_forward(*args, **kwargs)
+                        hidden_states = outputs[0]
+                        fmri_context = kwargs.get("fmri_context")
+                        if fmri_context is not None:
+                            hidden_states = cross_attn(hidden_states, fmri_context)
+                        return (hidden_states,) + outputs[1:]
+                    return new_forward
+
+                block.forward = make_forward(old_forward, self.cross_layers[i])
+
+    def forward(self, input_ids, attention_mask, fmri_embedding):
+        fmri_context = self.fmri_proj(fmri_embedding)  # [batch, ctx_len, hidden]
+        return self.model(input_ids=input_ids, attention_mask=attention_mask,
+                          fmri_context=fmri_context)
 
 
 def compute_input_size_1d(output_size, n_layers, factor):
