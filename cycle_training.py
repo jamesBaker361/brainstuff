@@ -37,7 +37,7 @@ parser.add_argument("--test_limit",type=int,help="limit # of testing batches",de
 parser.add_argument("--translation_loss",action="store_true")
 parser.add_argument("--reconstruction_loss",action="store_true")
 parser.add_argument("--validation_interval",type= int,default=1)
-parser.add_argument("--residual_blocks",type=int,default=2)
+parser.add_argument("--residual_blocks",type=int,default=1)
 
 def concat_images_horizontally(*imgs: Image.Image) -> Image.Image:
     """

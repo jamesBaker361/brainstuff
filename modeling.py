@@ -88,7 +88,7 @@ class PixelVoxelArrayModel(nn.Module):
             in_channels=shape[0]
             if input_modality=="array":
                 for _ in range(residual_blocks):
-                  down_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
+                  #down_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
                   down_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
                 out_channels=in_channels//2
                 down_layer_list.append(down_layer(in_channels,out_channels))
@@ -96,7 +96,7 @@ class PixelVoxelArrayModel(nn.Module):
             else:
                 out_channels=in_channels*2
                 for _ in range(residual_blocks):
-                  down_layer_list.append(PixelBlock(in_channels,in_channels//2,in_channels,True))
+                  #down_layer_list.append(PixelBlock(in_channels,in_channels//2,in_channels,True))
                   down_layer_list.append(PixelBlock(in_channels,in_channels//2,in_channels,True))
                 down_layer_list.append(down_layer(in_channels,out_channels,kernel_size,stride,padding=padding))
                 shape=(out_channels, *[d//2 for d in shape[1:]])
@@ -131,7 +131,7 @@ class PixelVoxelArrayModel(nn.Module):
                 
                 up_layer_list.append(up_layer(in_channels,out_channels))
                 for _ in range(residual_blocks):
-                  up_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
+                  #up_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
                   up_layer_list.append(ArrayBlock(in_channels,in_channels//2, in_channels,True))
                 shape=[in_channels]
             else:
@@ -139,7 +139,7 @@ class PixelVoxelArrayModel(nn.Module):
                 
                 up_layer_list.append(up_layer(in_channels,out_channels,factor,factor))
                 for _ in range(residual_blocks):
-                  up_layer_list.append(PixelBlock(in_channels,in_channels//2, in_channels,True))
+                  #up_layer_list.append(PixelBlock(in_channels,in_channels//2, in_channels,True))
                   up_layer_list.append(PixelBlock(in_channels,in_channels//2, in_channels,True))
                 
                 shape=(in_channels, *[d//2 for d in shape[1:]])
