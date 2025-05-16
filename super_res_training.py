@@ -72,6 +72,7 @@ def concat_images_horizontally(*imgs: Image.Image) -> Image.Image:
 def main(args):
     if args.deepspeed==True:
         accelerator=Accelerator(log_with="wandb")
+        print("deepspeed training!")
     else:
         accelerator=Accelerator(log_with="wandb",
                                 mixed_precision=args.mixed_precision,
