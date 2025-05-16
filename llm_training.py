@@ -115,3 +115,4 @@ def main(args):
             subject_captions_train=npz_loaded["captions_train"]
 
             print(subject_captions_test[0])
+            print(subject_captions_train[0])
