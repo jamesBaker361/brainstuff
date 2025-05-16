@@ -59,3 +59,4 @@ for sub in sublist:
     pca.fit(train_fmri)
 
     joblib.dump(pca, os.path.join(os.environ["BRAIN_DATA_DIR"],"pca",f"subj{sub:02d}_fmri.pkl"))
+    print("saved ",f"subj{sub:02d}_fmri.pkl")
