@@ -263,8 +263,8 @@ def main(args):
                         for i in img_np:
                             data_list.append(Image.fromarray(i))
 
-                    for k,(real,translated,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
-                        concat=concat_images_horizontally(real,translated,reconstructed)
+                    for k,(real,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
+                        concat=concat_images_horizontally(real,reconstructed)
                         #accelerator.log({"val_result":wandb.Image(concat)})
                         metrics[f"val_result_{k}"]=wandb.Image(concat)
             accelerator.log(metrics)
@@ -293,8 +293,8 @@ def main(args):
                     for i in img_np:
                         data_list.append(Image.fromarray(i))
 
-            for k,(real,translated,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
-                concat=concat_images_horizontally(real,translated,reconstructed)
+            for k,(real,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
+                concat=concat_images_horizontally(real,reconstructed)
             reconstructed_clip=np.mean(clip_difference(image_list,reconstructed_image_list))
 
             metrics={
