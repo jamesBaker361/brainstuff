@@ -201,7 +201,7 @@ def main(args):
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
         model=SuperResolutionModel((256,4,4),(3,512,512),args.residual_blocks)
-        model.to(device,torch_dtype)
+        model=model.to(device,torch_dtype)
         optimizer=torch.optim.AdamW([p for p in model.parameters()],0.0001)
 
         model,optimizer,train_loader,test_loader=accelerator.prepare(model,optimizer,train_loader,test_loader)
