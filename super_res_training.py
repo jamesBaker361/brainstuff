@@ -183,8 +183,8 @@ def main(args):
             break
 
         
-        img=batch["image"].to(device,torch_dtype)
-        fmri=batch["fmri"].to(device,torch_dtype)
+        img=batch["image"].to(device).to(device)
+        fmri=batch["fmri"].to(device).to(device)
         fmri_size=fmri.size()
         image_size=img.size()
         print("img min, max",img.min(),img.max())
@@ -201,13 +201,13 @@ def main(args):
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
         model=SuperResolutionModel((256,4,4),(3,512,512),args.residual_blocks)
-        model=model.to(device,torch_dtype)
-
+        model=model.to(device).to(device)
 
         # If using torch_dtype=torch.float16, also convert manually:
         if torch_dtype == torch.float16:
             for p in model.parameters():
                 p.data = p.data.half()
+
         optimizer=torch.optim.AdamW([p for p in model.parameters()],0.0001)
 
         model,optimizer,train_loader,test_loader=accelerator.prepare(model,optimizer,train_loader,test_loader)
@@ -223,8 +223,8 @@ def main(args):
                     if e %args.validation_interval==0 and random.random() < args.val_split:
                         validation_set.append(batch)
                         continue
-                    fmri=batch["fmri"].to(device,torch_dtype)
-                    images=batch["image"].to(device,torch_dtype)
+                    fmri=batch["fmri"].to(device).to(device)
+                    images=batch["image"].to(device).to(device)
                     batch_size=images.size()[0]
 
                     optimizer.zero_grad()
@@ -244,8 +244,8 @@ def main(args):
                 with torch.no_grad():
                     for batch in validation_set:
                         
-                        fmri=batch["fmri"].to(device,torch_dtype)
-                        images=batch["image"].to(device,torch_dtype)
+                        fmri=batch["fmri"].to(device).to(device)
+                        images=batch["image"].to(device).to(device)
                         batch_size=images.size()[0]
 
                         reconstructed_images=model(fmri)
@@ -253,8 +253,8 @@ def main(args):
                         val_loss_list.append(loss.cpu().detach().item())
                     metrics["val_loss"]=np.mean(val_loss_list)
                     for batch in validation_set:
-                        fmri=batch["fmri"].to(device,torch_dtype)
-                        images=batch["image"].to(device,torch_dtype)
+                        fmri=batch["fmri"].to(device).to(device)
+                        images=batch["image"].to(device).to(device)
                         break
                     reconstructed_images=model(fmri)
 
@@ -283,8 +283,8 @@ def main(args):
             for k,batch in enumerate(test_loader):
                 if k==args.test_limit:
                     break
-                fmri=batch["fmri"].to(device,torch_dtype)
-                images=batch["image"].to(device,torch_dtype)
+                fmri=batch["fmri"].to(device).to(device)
+                images=batch["image"].to(device).to(device)
                 batch_size=images.size()[0]
 
                 reconstructed_images=model(fmri)
