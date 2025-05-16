@@ -41,6 +41,7 @@ parser.add_argument("--train_limit",type=int,default=-1,help="limit # of trainin
 parser.add_argument("--test_limit",type=int,help="limit # of testing batches",default=-1)
 parser.add_argument("--validation_interval",type= int,default=1)
 parser.add_argument("--residual_blocks",type=int,default=2)
+parser.add_argument("--deepspeed",action="store_true")
 
 def concat_images_horizontally(*imgs: Image.Image) -> Image.Image:
     """
@@ -69,7 +70,12 @@ def concat_images_horizontally(*imgs: Image.Image) -> Image.Image:
     return new_img
 
 def main(args):
-    accelerator=Accelerator(log_with="wandb")
+    if args.deepspeed:
+        accelerator=Accelerator(log_with="wandb")
+    else:
+        accelerator=Accelerator(log_with="wandb",
+                                mixed_precision=args.mixed_precision,
+                                gradient_accumulation_steps=args.gradient_accumulation_steps)
     print("accelerator device",accelerator.device)
     device=accelerator.device
     accelerator.init_trackers(project_name=args.project_name,config=vars(args))
