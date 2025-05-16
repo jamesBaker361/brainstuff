@@ -3,6 +3,50 @@ from torch import nn
 from functools import reduce
 import operator
 from deep_modeling import ArrayBlock, PixelBlock
+import torch
+import torch.nn as nn
+from transformers import GPT2Model, GPT2Tokenizer, GPT2Config
+
+class FMRIConditionedGPT2(nn.Module):
+    def __init__(self, fmri_dim=128, model_name='gpt2', num_cross_layers=4):
+        super().__init__()
+        self.gpt2 = GPT2Model.from_pretrained(model_name)
+        self.config = self.gpt2.config
+        self.cross_layers = nn.ModuleList()
+
+        # Project fMRI input to GPT embedding space
+        self.fmri_proj = nn.Linear(fmri_dim, self.config.hidden_size)
+
+        # Add cross-attention after selected GPT layers
+        for i in range(self.config.n_layer):
+            if i < num_cross_layers:
+                self.cross_layers.append(CrossAttentionBlock(self.config.hidden_size, self.config.n_head))
+            else:
+                self.cross_layers.append(None)
+
+    def forward(self, input_ids, fmri_embed):
+        # Project and expand fMRI to [batch, seq_len=1, hidden_size]
+        B = self.fmri_proj(fmri_embed)  # [batch, seq_len, D]
+        gpt_outputs = self.gpt2.wte(input_ids)  # [batch, seq, D]
+        hidden_states = gpt_outputs
+
+        for i, block in enumerate(self.gpt2.h):
+            hidden_states = block(hidden_states)[0]  # GPT-2 self-attn + FFN
+            if self.cross_layers[i] is not None:
+                hidden_states = self.cross_layers[i](hidden_states, B)
+
+        return hidden_states
+
+class CrossAttentionBlock(nn.Module):
+    def __init__(self, embed_dim, num_heads):
+        super().__init__()
+        self.cross_attn = nn.MultiheadAttention(embed_dim, num_heads, batch_first=True)
+        self.norm = nn.LayerNorm(embed_dim)
+
+    def forward(self, x, context):
+        attn_out, _ = self.cross_attn(x, context, context)
+        return self.norm(x + attn_out)
+
 
 def compute_input_size_1d(output_size, n_layers, factor):
     dim=output_size[-1]
