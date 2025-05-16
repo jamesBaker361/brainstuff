@@ -202,6 +202,12 @@ def main(args):
 
         model=SuperResolutionModel((256,4,4),(3,512,512),args.residual_blocks)
         model=model.to(device,torch_dtype)
+
+
+        # If using torch_dtype=torch.float16, also convert manually:
+        if torch_dtype == torch.float16:
+            for p in model.parameters():
+                p.data = p.data.half()
         optimizer=torch.optim.AdamW([p for p in model.parameters()],0.0001)
 
         model,optimizer,train_loader,test_loader=accelerator.prepare(model,optimizer,train_loader,test_loader)
