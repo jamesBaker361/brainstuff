@@ -141,7 +141,7 @@ def main(args):
         train_img=[np.transpose(i, (2,0,1)) for i in train_img]
         test_img=[np.transpose(i, (2,0,1)) for i in test_img]
 
-        pca = joblib.load(os.path.join(os.environ["BRAIN_DATA_DIR"],"pca",f"subj{sub:02d}_fmri.pkl"))
+        pca = joblib.load(os.path.join(os.environ["BRAIN_DATA_DIR"],"pca",f"subj{sub:02d}_4096_fmri.pkl"))
 
         train_fmri=pca.transform(train_fmri)
         test_fmri=pca.transform(test_fmri)
