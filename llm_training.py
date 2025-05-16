@@ -42,6 +42,7 @@ parser.add_argument("--test_limit",type=int,help="limit # of testing batches",de
 parser.add_argument("--validation_interval",type= int,default=1)
 parser.add_argument("--residual_blocks",type=int,default=2)
 parser.add_argument("--deepspeed",action="store_true")
+parser.add_argument("--dim",type=int,default=1024)
 
 def concat_images_horizontally(*imgs: Image.Image) -> Image.Image:
     """
@@ -141,6 +142,13 @@ def main(args):
                     if len(caption) > 0:
                         train_text.append(caption)
                         train_fmri.append(fmri)
+        
+        pca = joblib.load(os.path.join(os.environ["BRAIN_DATA_DIR"],"pca",f"subj{sub:02d}_{args.dim}_fmri.pkl"))
+
+        train_fmri=pca.transform(train_fmri)
+        test_fmri=pca.transform(test_fmri)
+
+        print('train_fmri.shape,test_fmri.shape',train_fmri.shape,test_fmri.shape)
 
 
 if __name__=='__main__':
