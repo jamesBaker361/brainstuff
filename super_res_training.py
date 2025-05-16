@@ -8,7 +8,7 @@ import numpy as np
 import os
 from torch.utils.data import DataLoader
 from data_helpers import BrainImageSubjectDataset,UnpairedImageDataset
-from modeling import PixelVoxelArrayModel,Discriminator,FusedModel
+from modeling import PixelVoxelArrayModel,Discriminator,FusedModel,SuperResolutionModel
 import random
 import torch.nn.functional as F
 import wandb
@@ -35,19 +35,10 @@ parser.add_argument("--project_name",type=str,default="person")
 parser.add_argument("--gradient_accumulation_steps",type=int,default=4)
 parser.add_argument("--batch_size",type=int,default=4)
 parser.add_argument("--val_split",type=float,default=0.1)
-parser.add_argument("--kernel_size",type=int,default=4)
-parser.add_argument("--n_layers",type=int,default=4)
-parser.add_argument("--n_layers_trans",type=int,default=4)
-parser.add_argument("--n_layers_disc",type=int,default=4)
 parser.add_argument("--epochs",type=int,default=10)
-parser.add_argument("--use_discriminator",action="store_true")
 parser.add_argument("--sublist",nargs="*",type=int)
-parser.add_argument("--unpaired_image_dataset",type=str,default="",help="hf path for unpaired images")
-parser.add_argument("--key",type=str,default="image",help="image key if using unpaired images")
 parser.add_argument("--train_limit",type=int,default=-1,help="limit # of training batches")
 parser.add_argument("--test_limit",type=int,help="limit # of testing batches",default=-1)
-parser.add_argument("--translation_loss",action="store_true")
-parser.add_argument("--reconstruction_loss",action="store_true")
 parser.add_argument("--validation_interval",type= int,default=1)
 parser.add_argument("--residual_blocks",type=int,default=2)
 
@@ -214,7 +205,72 @@ def main(args):
         train_loader=DataLoader(train_dataset,batch_size=args.batch_size,shuffle=True)
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
+        model=SuperResolutionModel((256,4,4),(3,512,512),args.residual_blocks)
+        optimizer=torch.optim.AdamW([p for p in model.parameters()],0.0001)
 
+        model,optimizer,train_loader,test_loader=accelerator.prepare(model,optimizer,train_loader,test_loader)
+
+        for e in range(1, args.epochs+1):
+            start=time.time()
+            validation_set=[]
+            train_loss_list=[]
+            for k,batch in enumerate(train_loader):
+                if k==args.train_limit:
+                    break
+                with accelerator.accumulate(model):
+                    if e %args.validation_interval==0 and random.random() < args.val_split:
+                        validation_set.append(batch)
+                        continue
+                    fmri=batch["fmri"].to(device,torch_dtype)
+                    images=batch["image"].to(device,torch_dtype)
+                    batch_size=images.size()[0]
+
+                    optimizer.zero_grad()
+                    reconstructed_images=model(fmri)
+                    loss=F.mse_loss(images,reconstructed_images)
+                    train_loss_list.append(loss.cpu().detach().item())
+                    accelerator.backward(loss)
+                    optimizer.step()
+            metrics={
+                "training_loss":np.mean(train_loss_list)
+            }
+            #validation
+            if len(validation_set)!=0:
+                val_loss_list=[]
+                with torch.no_grad():
+                    for batch in validation_set:
+                        
+                        fmri=batch["fmri"].to(device,torch_dtype)
+                        images=batch["image"].to(device,torch_dtype)
+                        batch_size=images.size()[0]
+
+                        reconstructed_images=model(fmri)
+                        loss=F.mse_loss(images,reconstructed_images)
+                        val_loss_list.append(loss.cpu().detach().item())
+                metrics["val_loss"]=np.mean(val_loss_list)
+                for batch in validation_set:
+                    fmri=batch["fmri"].to(device,torch_dtype)
+                    images=batch["image"].to(device,torch_dtype)
+                    break
+                reconstructed_images=model(fmri)
+
+                reconstructed_image_list=[]
+                image_list=[]
+
+                for img_data,data_list in zip([images,reconstructed_images],
+                                        [image_list,reconstructed_image_list]):
+                    img_np=img_data.cpu().permute(0, 2, 3, 1).float().numpy()
+                    img_np=img_np*255
+                    img_np=img_np.round().astype(np.uint8)
+                    for i in img_np:
+                        data_list.append(Image.fromarray(i))
+
+                for k,(real,translated,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
+                    concat=concat_images_horizontally(real,translated,reconstructed)
+                    #accelerator.log({"val_result":wandb.Image(concat)})
+                    metrics[f"val_result_{k}"]=wandb.Image(concat)
+            accelerator.log(metrics)
+                
 
 
 if __name__=='__main__':
