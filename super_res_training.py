@@ -138,7 +138,7 @@ def main(args):
         pca = joblib.load(os.path.join(os.environ["BRAIN_DATA_DIR"],"pca",f"subj{sub:02d}_fmri.pkl"))
 
         train_fmri=pca.transform(train_fmri)
-        test_fmri=pca.transform(train_fmri)
+        test_fmri=pca.transform(test_fmri)
 
         print('train_fmri.shape,test_fmri.shape',train_fmri.shape,test_fmri.shape)
 
