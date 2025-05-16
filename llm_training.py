@@ -116,3 +116,16 @@ def main(args):
 
             print(subject_captions_test[0])
             print(subject_captions_train[0])
+
+
+if __name__=='__main__':
+    print_details()
+    start=time.time()
+    args=parser.parse_args()
+    print(args)
+    main(args)
+    end=time.time()
+    seconds=end-start
+    hours=seconds/(60*60)
+    print(f"successful generating:) time elapsed: {seconds} seconds = {hours} hours")
+    print("all done!")
