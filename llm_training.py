@@ -114,8 +114,8 @@ def main(args):
             subject_captions_test=npz_loaded["captions_test"]
             subject_captions_train=npz_loaded["captions_train"]
 
-            print(subject_captions_test[0])
-            print(subject_captions_train[0])
+            print("test",subject_captions_test[0])
+            print("train",subject_captions_train[0])
 
 
 if __name__=='__main__':
