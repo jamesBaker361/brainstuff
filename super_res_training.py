@@ -70,7 +70,7 @@ def concat_images_horizontally(*imgs: Image.Image) -> Image.Image:
     return new_img
 
 def main(args):
-    if args.deepspeed:
+    if args.deepspeed==True:
         accelerator=Accelerator(log_with="wandb")
     else:
         accelerator=Accelerator(log_with="wandb",
