@@ -172,7 +172,7 @@ def main(args):
             normalize
         ])
 
-        train_dataset=BrainImageSubjectDataset(train_fmri,train_img,train_labels,args.fmri_type,transform=transform)
+        train_dataset=BrainImageSubjectDataset(train_fmri,train_img,train_labels,"array",transform=transform)
         for batch in train_dataset:
             break
 
@@ -223,6 +223,8 @@ def main(args):
             metrics={
                 "training_loss":np.mean(train_loss_list)
             }
+            end=time.time()
+            print(f"epoch {e} elapsed {end-start}")
             #validation
             if len(validation_set)!=0:
                 val_loss_list=[]
@@ -259,6 +261,34 @@ def main(args):
                     #accelerator.log({"val_result":wandb.Image(concat)})
                     metrics[f"val_result_{k}"]=wandb.Image(concat)
             accelerator.log(metrics)
+        #testing
+        reconstructed_image_list=[]
+        image_list=[]
+        metrics={}
+        with torch.no_grad():
+            test_loss_list=[]
+            for k,batch in enumerate(test_loader):
+                if k==args.test_limit:
+                    break
+                fmri=batch["fmri"].to(device,torch_dtype)
+                images=batch["image"].to(device,torch_dtype)
+                batch_size=images.size()[0]
+
+                reconstructed_images=model(fmri)
+                loss=F.mse_loss(images,reconstructed_images)
+                test_loss_list.append(loss.cpu().detach().item())
+
+                for img_data,data_list in zip([images,reconstructed_images],
+                                        [image_list,reconstructed_image_list]):
+                    img_np=img_data.cpu().permute(0, 2, 3, 1).float().numpy()
+                    img_np=img_np*255
+                    img_np=img_np.round().astype(np.uint8)
+                    for i in img_np:
+                        data_list.append(Image.fromarray(i))
+
+            for k,(real,translated,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
+                concat=concat_images_horizontally(real,translated,reconstructed)
+        
                 
 
 
