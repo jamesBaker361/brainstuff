@@ -190,6 +190,43 @@ class FusedModel(nn.Module):
         self.pixel_discriminator=pixel_discriminator
         self.fmri_discriminator=fmri_discriminator
 
+
+class SuperResolutionModel(nn.Module):
+    def __init__(self,input_dim,
+                 output_dim,
+                 residual_blocks,*args, **kwargs):
+        super().__init__(*args, **kwargs)
+        layer_list=[]
+        in_channels=input_dim[0]
+        out_channels=output_dim[0]
+        in_width=input_dim[-1]
+        out_width=output_dim[-1]
+
+        layers=0
+        while out_width>in_width:
+            layers+=1
+            out_width=out_width//2
+
+        for _ in range(layers):
+            for __ in range(residual_blocks):
+                layer_list.append(PixelBlock(in_channels,in_channels//2,in_channels,True))
+            layer_list.append(nn.ConvTranspose2d(in_channels,in_channels//2,2,2))
+            in_channels=in_channels//2
+        layer_list.append(nn.Conv2d(in_channels,out_channels,1,1))
+        layer_list.append(nn.Sigmoid())
+
+        self.module_list=nn.ModuleList(layer_list)
+
+    def forward(self,x):
+        for layer in self.module_list:
+            x=layer(x)
+
+        return x
+
+
+
+
+
 class Discriminator(nn.Module):
     def __init__(self,
                  input_dim,
