@@ -3,14 +3,16 @@ from sklearn.decomposition import PCA
 import numpy as np
 import os
 import joblib
+import argparse
 
-train_fmri=[]
-train_img=[]
-train_labels=[]
+parser=argparse.ArgumentParser()
 
-test_fmri=[]
-test_img=[]
-test_labels=[]
+parser.add_argument("--dim",type=int,default=4096)
+
+args=parser.parse_args()
+dim=args.dim
+
+
 subject_class_labels={
     1:np.array([1,0,0,0]),
     2:np.array([0,1,0,0]),
@@ -19,6 +21,13 @@ subject_class_labels={
 }
 sublist=[1, 2, 5, 7]
 for sub in sublist:
+    train_fmri=[]
+    train_img=[]
+    train_labels=[]
+
+    test_fmri=[]
+    test_img=[]
+    test_labels=[]
     fmri_suffix="flattened"
     path=os.environ["BRAIN_DATA_DIR"]+f"/subj{sub:02d}_fmri{fmri_suffix}_stim_paired.npz"
     os.makedirs(os.path.join(os.environ["BRAIN_DATA_DIR"],"pca"),exist_ok=True)
@@ -55,8 +64,8 @@ for sub in sublist:
     test_labels.extend(subject_test_labels)
 
 
-    pca = PCA(n_components=4096)
+    pca = PCA(n_components=dim)
     pca.fit(train_fmri)
 
-    joblib.dump(pca, os.path.join(os.environ["BRAIN_DATA_DIR"],"pca",f"subj{sub:02d}_fmri.pkl"))
+    joblib.dump(pca, os.path.join(os.environ["BRAIN_DATA_DIR"],"pca",f"subj{sub:02d}_{dim}_fmri.pkl"))
     print("saved ",f"subj{sub:02d}_fmri.pkl")
