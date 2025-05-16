@@ -114,8 +114,33 @@ def main(args):
             subject_captions_test=npz_loaded["captions_test"]
             subject_captions_train=npz_loaded["captions_train"]
 
-            print("test",subject_captions_test[0])
-            print("train",subject_captions_train[0])
+            
+
+            n_test=len(subject_fmri_test)
+            n_train=len(subject_fmri_train)
+
+
+            
+            print(sub,'subject_fmri_train.max(),subject_fmri_train.min()',subject_fmri_train.max(),subject_fmri_train.min())
+            print(sub,'subject_fmri_test.max(),subject_fmri_test.min()',subject_fmri_test.max(),subject_fmri_test.min())
+            
+            fmri_min=min(subject_fmri_train.min(),subject_fmri_test.min())
+            fmri_max=max(subject_fmri_train.max(),subject_fmri_test.max())
+
+            subject_fmri_train=2 * (subject_fmri_train-fmri_min) / (fmri_max-fmri_min) -1
+            subject_fmri_test=2 * (subject_fmri_test-fmri_min) / (fmri_max-fmri_min) -1
+
+            for row,fmri in zip(subject_captions_test,subject_fmri_test):
+                for caption in row:
+                    if len(caption) > 0:
+                        test_text.append(caption)
+                        test_fmri.append(fmri)
+            
+            for row,fmri in zip(subject_captions_train,subject_fmri_train):
+                for caption in row:
+                    if len(caption) > 0:
+                        train_text.append(caption)
+                        train_fmri.append(fmri)
 
 
 if __name__=='__main__':
