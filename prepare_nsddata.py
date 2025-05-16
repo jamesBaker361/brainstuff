@@ -150,26 +150,25 @@ print("All done. Shapes:")
 print("fmri_train:", fmri_train.shape)
 print("stim_train:", stim_train.shape)
 
-'''annots_cur = np.load(os.environ["BRAIN_DATA_DIR"]+'/annots/COCO_73k_annots_curated.npy',allow_pickle=True)
+annots_cur = np.load(os.environ["BRAIN_DATA_DIR"]+'/annots/COCO_73k_annots_curated.npy',allow_pickle=True)
 
-captions_array = np.empty((num_train,5),dtype=annots_cur.dtype)
+captions_train = np.empty((num_train,5),dtype=annots_cur.dtype)
 for i,idx in enumerate(train_im_idx):
-    captions_array[i,:] = annots_cur[idx,:]
-    print(f"{i}/{len(train_im_idx)}")
-np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_train_cap_sub{}.npy'.format(sub,sub),captions_array )
-    
-captions_array = np.empty((num_test,5),dtype=annots_cur.dtype)
-for i,idx in enumerate(test_im_idx):
-    captions_array[i,:] = annots_cur[idx,:]
-    print(f"{i}/{len(test_im_idx)}")
-np.save(os.environ["BRAIN_DATA_DIR"]+'/processed_data/subj{:02d}/nsd_test_cap_sub{}.npy'.format(sub,sub),captions_array )
+    captions_train[i,:] = annots_cur[idx,:]
 
-print("Caption data are saved.")'''
+    
+captions_test = np.empty((num_test,5),dtype=annots_cur.dtype)
+for i,idx in enumerate(test_im_idx):
+    captions_test[i,:] = annots_cur[idx,:]
+    
+print("Caption data are saved.")
 save_path = os.environ["BRAIN_DATA_DIR"]+f"/subj{sub:02d}_fmriflattened_stim_paired.npz"
 np.savez_compressed(
     save_path,
     fmri_train=fmri_train,
     stim_train=stim_train,
     fmri_test=fmri_test,
-    stim_test=stim_test
+    stim_test=stim_test,
+    captions_test=captions_test,
+    captions_train=captions_train
 )
