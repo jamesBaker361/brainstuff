@@ -43,6 +43,35 @@ class UnpairedImageDataset(Dataset):
         if self.transform:
             img=self.transform(img)
         return img
+    
+
+class FMRITextDataset(Dataset):
+    def __init__(self, texts, fmri_data, tokenizer, max_length=128):
+        self.texts = texts
+        self.fmri_data = fmri_data
+        self.tokenizer = tokenizer
+        self.max_length = max_length
+
+    def __len__(self):
+        return len(self.texts)
+
+    def __getitem__(self, idx):
+        text = self.texts[idx]
+        fmri = self.fmri_data[idx]  # Tensor of shape [fmri_dim]
+
+        enc = self.tokenizer(
+            text,
+            max_length=self.max_length,
+            truncation=True,
+            padding='max_length',
+            return_tensors="pt"
+        )
+        return {
+            "input_ids": enc["input_ids"].squeeze(0),
+            "attention_mask": enc["attention_mask"].squeeze(0),
+            "fmri": fmri
+        }
+
 
 
 class BrainImageSubjectDataset(Dataset):
