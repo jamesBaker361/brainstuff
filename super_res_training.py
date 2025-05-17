@@ -218,7 +218,10 @@ def main(args):
                 p.data = p.data.half()'''
 
         optimizer=torch.optim.AdamW([p for p in model.parameters()],0.001)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=len(train_dataset)*args.epochs,verbose=False)
+        try:
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=len(train_dataset)*args.epochs,verbose=False)
+        except TypeError:
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=len(train_dataset)*args.epochs)
 
         model,optimizer,scheduler,train_loader,test_loader=accelerator.prepare(model,optimizer,scheduler,train_loader,test_loader)
 
