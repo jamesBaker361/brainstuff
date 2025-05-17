@@ -2,11 +2,22 @@ import torch
 from torch import nn
 from functools import reduce
 import operator
-from deep_modeling import ArrayBlock, PixelBlock
 import torch
 import torch.nn as nn
-from transformers import GPT2Model, GPT2Tokenizer, GPT2Config
+from transformers import GPT2Model, GPT2Tokenizer, GPT2Config,GPT2LMHeadModel
 from transformers import LlamaForCausalLM, LlamaTokenizer
+from transformers.modeling_outputs import BaseModelOutput,BaseModelOutputWithPastAndCrossAttentions,CausalLMOutputWithCrossAttentions
+from transformers.utils import (
+
+    logging,
+)
+from transformers.modeling_attn_mask_utils import AttentionMaskConverter, _prepare_4d_attention_mask_for_sdpa, _prepare_4d_causal_attention_mask_for_sdpa
+from transformers.cache_utils import Cache, DynamicCache, EncoderDecoderCache, StaticCache
+from typing import Optional,Union,Tuple
+
+logger = logging.get_logger(__name__)
+from deep_modeling import PixelBlock,ArrayBlock
+
 
 class CrossAttentionBlock(nn.Module):
     def __init__(self, embed_dim, num_heads):
@@ -14,39 +25,263 @@ class CrossAttentionBlock(nn.Module):
         self.cross_attn = nn.MultiheadAttention(embed_dim, num_heads, batch_first=True)
         self.norm = nn.LayerNorm(embed_dim)
 
-    def forward(self, x, context):
-        attn_out, _ = self.cross_attn(x, context, context)
+    def forward(self, x, context, context_mask=None):
+        """
+        x: [batch, tgt_len, dim]
+        context: [batch, ctx_len, dim]
+        context_mask: [batch, ctx_len] (0 for pad, 1 for real tokens)
+        """
+        if context_mask is not None:
+            # Convert to key_padding_mask: True for padding, False for valid tokens
+            key_padding_mask = context_mask == 0  # shape: [batch, ctx_len]
+        else:
+            key_padding_mask = None
+
+        attn_out, _ = self.cross_attn(
+            query=x,
+            key=context,
+            value=context,
+            key_padding_mask=key_padding_mask
+        )
+
         return self.norm(x + attn_out)
+
+
+
+
 
 class FMRIConditionedGPT2(nn.Module):
     def __init__(self, fmri_dim=128, model_name='openai-community/gpt2-xl', num_cross_layers=4):
         super().__init__()
-        self.gpt2 = GPT2Model.from_pretrained(model_name)
-        self.config = self.gpt2.config
+        self.gpt2lm=GPT2LMHeadModel.from_pretrained(model_name)
+        self.gpt = self.gpt2lm.transformer
+        self.config = self.gpt.config
         self.cross_layers = nn.ModuleList()
 
         # Project fMRI input to GPT embedding space
         self.fmri_proj = nn.Linear(fmri_dim, self.config.hidden_size)
 
         # Add cross-attention after selected GPT layers
-        for i in range(self.config.n_layer):
-            if i < num_cross_layers:
-                self.cross_layers.append(CrossAttentionBlock(self.config.hidden_size, self.config.n_head))
+        for i in range(self.config.num_hidden_layers):
+            if i==num_cross_layers:
+                break
+            self.cross_layers.append(CrossAttentionBlock(self.config.hidden_size, self.config.num_attention_heads))
+
+
+    def forward(
+        self,
+        input_ids: Optional[torch.LongTensor] = None,
+        fmri_embedding=None,
+        past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
+        attention_mask: Optional[torch.FloatTensor] = None,
+        token_type_ids: Optional[torch.LongTensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        head_mask: Optional[torch.FloatTensor] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        encoder_hidden_states: Optional[torch.Tensor] = None,
+        encoder_attention_mask: Optional[torch.FloatTensor] = None,
+        use_cache: Optional[bool] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
+    ) -> Union[Tuple, BaseModelOutputWithPastAndCrossAttentions]:
+        fmri_context = self.fmri_proj(fmri_embedding)  # [batch, ctx_len, hidden]
+        fmri_context = fmri_context.unsqueeze(1).expand(-1, input_ids.size()[1], -1)
+        output_attentions = output_attentions if output_attentions is not None else self.gpt.config.output_attentions
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.gpt.config.output_hidden_states
+        )
+        use_cache = use_cache if use_cache is not None else self.gpt.config.use_cache
+        return_dict = return_dict if return_dict is not None else self.gpt.config.use_return_dict
+
+        if input_ids is not None and inputs_embeds is not None:
+            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+        elif input_ids is not None:
+            self.gpt.warn_if_padding_and_no_attention_mask(input_ids, attention_mask)
+            input_shape = input_ids.size()
+            input_ids = input_ids.view(-1, input_shape[-1])
+            batch_size = input_ids.shape[0]
+        elif inputs_embeds is not None:
+            input_shape = inputs_embeds.size()[:-1]
+            batch_size = inputs_embeds.shape[0]
+        else:
+            raise ValueError("You have to specify either input_ids or inputs_embeds")
+
+        device = input_ids.device if input_ids is not None else inputs_embeds.device
+
+        if token_type_ids is not None:
+            token_type_ids = token_type_ids.view(-1, input_shape[-1])
+
+        if past_key_values is None:
+            past_length = 0
+            past_key_values = tuple([None] * len(self.gpt.h))
+        else:
+            past_length = past_key_values[0][0].size(-2)
+        if position_ids is None:
+            position_ids = torch.arange(past_length, input_shape[-1] + past_length, dtype=torch.long, device=device)
+            position_ids = position_ids.unsqueeze(0)
+
+        if inputs_embeds is None:
+            inputs_embeds = self.gpt.wte(input_ids)
+        position_embeds = self.gpt.wpe(position_ids)
+        hidden_states = inputs_embeds + position_embeds.to(inputs_embeds.device)
+
+        # Attention mask.
+        _use_sdpa = self.gpt._attn_implementation == "sdpa" and output_attentions is False and head_mask is None
+        attention_mask = attention_mask.view(batch_size, -1) if attention_mask is not None else None
+        if self.gpt._attn_implementation == "flash_attention_2":
+            attention_mask = attention_mask if (attention_mask is not None and 0 in attention_mask) else None
+        elif _use_sdpa:
+            attention_mask = _prepare_4d_causal_attention_mask_for_sdpa(
+                attention_mask=attention_mask,
+                input_shape=(batch_size, input_shape[-1]),
+                inputs_embeds=inputs_embeds,
+                past_key_values_length=past_length,
+            )
+        else:
+            if attention_mask is not None:
+                # We create a 3D attention mask from a 2D tensor mask.
+                # Sizes are [batch_size, 1, 1, to_seq_length]
+                # So we can broadcast to [batch_size, num_heads, from_seq_length, to_seq_length]
+                # this attention mask is more simple than the triangular masking of causal attention
+                # used in OpenAI GPT, we just need to prepare the broadcast dimension here.
+                attention_mask = attention_mask[:, None, None, :]
+
+                # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
+                # masked positions, this operation will create a tensor which is 0.0 for
+                # positions we want to attend and the dtype's smallest value for masked positions.
+                # Since we are adding it to the raw scores before the softmax, this is
+                # effectively the same as removing these entirely.
+                attention_mask = attention_mask.to(dtype=self.gpt.dtype)  # fp16 compatibility
+                attention_mask = (1.0 - attention_mask) * torch.finfo(self.gpt.dtype).min
+
+        # If a 2D or 3D attention mask is provided for the cross-attention
+        # we need to make broadcastable to [batch_size, num_heads, seq_length, seq_length]
+        if self.gpt.config.add_cross_attention and encoder_hidden_states is not None:
+            encoder_batch_size, encoder_sequence_length, _ = encoder_hidden_states.size()
+            encoder_hidden_shape = (encoder_batch_size, encoder_sequence_length)
+            if encoder_attention_mask is None:
+                encoder_attention_mask = torch.ones(encoder_hidden_shape, device=device)
+            if _use_sdpa:
+                encoder_attention_mask = _prepare_4d_attention_mask_for_sdpa(
+                    mask=encoder_attention_mask, dtype=inputs_embeds.dtype, tgt_len=input_shape[-1]
+                )
+            elif not self.gpt._attn_implementation == "flash_attention_2":
+                encoder_attention_mask = self.gpt.invert_attention_mask(encoder_attention_mask)
+        else:
+            encoder_attention_mask = None
+
+        # Prepare head mask if needed
+        # 1.0 in head_mask indicate we keep the head
+        # attention_probs has shape bsz x n_heads x N x N
+        # head_mask has shape n_layer x batch x n_heads x N x N
+        head_mask = self.gpt.get_head_mask(head_mask, self.gpt.config.n_layer)
+
+        if token_type_ids is not None:
+            token_type_embeds = self.gpt.wte(token_type_ids)
+            hidden_states = hidden_states + token_type_embeds
+
+        hidden_states = self.gpt.drop(hidden_states)
+
+        output_shape = (-1,) + input_shape[1:] + (hidden_states.size(-1),)
+
+        if self.gpt.gradient_checkpointing and self.gpt.training:
+            if use_cache:
+                logger.warning_once(
+                    "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+                )
+                use_cache = False
+
+        presents = () if use_cache else None
+        all_self_attentions = () if output_attentions else None
+        all_cross_attentions = () if output_attentions and self.gpt.config.add_cross_attention else None
+        all_hidden_states = () if output_hidden_states else None
+        for i in range(len(self.gpt.h)):
+            block, layer_past = self.gpt.h[i], past_key_values[i]
+            # Model parallel
+            if self.gpt.model_parallel:
+                torch.cuda.set_device(hidden_states.device)
+                # Ensure layer_past is on same device as hidden_states (might not be correct)
+                if layer_past is not None:
+                    layer_past = tuple(past_state.to(hidden_states.device) for past_state in layer_past)
+                # Ensure that attention_mask is always on the same device as hidden_states
+                if attention_mask is not None:
+                    attention_mask = attention_mask.to(hidden_states.device)
+                if isinstance(head_mask, torch.Tensor):
+                    head_mask = head_mask.to(hidden_states.device)
+            if output_hidden_states:
+                all_hidden_states = all_hidden_states + (hidden_states,)
+
+            if self.gpt.gradient_checkpointing and self.gpt.training:
+                outputs = self.gpt._gradient_checkpointing_func(
+                    block.__call__,
+                    hidden_states,
+                    None,
+                    attention_mask,
+                    head_mask[i],
+                    encoder_hidden_states,
+                    encoder_attention_mask,
+                    use_cache,
+                    output_attentions,
+                )
             else:
-                self.cross_layers.append(None)
+                outputs = block(
+                    hidden_states,
+                    layer_past=layer_past,
+                    attention_mask=attention_mask,
+                    head_mask=head_mask[i],
+                    encoder_hidden_states=encoder_hidden_states,
+                    encoder_attention_mask=encoder_attention_mask,
+                    use_cache=use_cache,
+                    output_attentions=output_attentions,
+                )
 
-    def forward(self, input_ids, fmri_embed):
-        # Project and expand fMRI to [batch, seq_len=1, hidden_size]
-        B = self.fmri_proj(fmri_embed)  # [batch, seq_len, D]
-        gpt_outputs = self.gpt2.wte(input_ids)  # [batch, seq, D]
-        hidden_states = gpt_outputs
+            hidden_states = outputs[0]
+            if use_cache is True:
+                presents = presents + (outputs[1],)
 
-        for i, block in enumerate(self.gpt2.h):
-            hidden_states = block(hidden_states)[0]  # GPT-2 self-attn + FFN
-            if self.cross_layers[i] is not None:
-                hidden_states = self.cross_layers[i](hidden_states, B)
+            if output_attentions:
+                all_self_attentions = all_self_attentions + (outputs[2 if use_cache else 1],)
+                if self.gpt.config.add_cross_attention:
+                    all_cross_attentions = all_cross_attentions + (outputs[3 if use_cache else 2],)
 
-        return hidden_states
+            # Model Parallel: If it's the last layer for that device, put things on the next device
+            if self.gpt.model_parallel:
+                for k, v in self.gpt.device_map.items():
+                    if i == v[-1] and "cuda:" + str(k) != self.gpt.last_device:
+                        hidden_states = hidden_states.to("cuda:" + str(k + 1))
+
+        hidden_states = self.gpt.ln_f(hidden_states)
+
+        hidden_states = hidden_states.view(output_shape)
+        # Add last hidden state
+        if output_hidden_states:
+            all_hidden_states = all_hidden_states + (hidden_states,)
+        hidden_states = self.gpt.ln_f(hidden_states)
+
+        hidden_states = hidden_states.view(output_shape)
+        # Add last hidden state
+        if output_hidden_states:
+            all_hidden_states = all_hidden_states + (hidden_states,)
+        
+        # Set device for model parallelism
+        if self.model_parallel:
+            torch.cuda.set_device(self.transformer.first_device)
+            hidden_states = hidden_states.to(self.lm_head.weight.device)
+
+        lm_logits = self.gpt2lm.lm_head(hidden_states)
+
+        return CausalLMOutputWithCrossAttentions(
+            loss=None,
+            logits=lm_logits,
+            past_key_values=past_key_values,
+            hidden_states=hidden_states,
+            attentions=all_self_attentions,
+            cross_attentions=all_cross_attentions
+        )
+        
+        
+
 
 
 from transformers import LlamaForCausalLM, LlamaTokenizer
