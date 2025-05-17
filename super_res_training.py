@@ -42,6 +42,7 @@ parser.add_argument("--test_limit",type=int,help="limit # of testing batches",de
 parser.add_argument("--validation_interval",type= int,default=1)
 parser.add_argument("--residual_blocks",type=int,default=2)
 parser.add_argument("--deepspeed",action="store_true")
+parser.add_argument("--pretest_limit",type=int,default=10)
 
 def concat_images_horizontally(*imgs: Image.Image) -> Image.Image:
     """
@@ -215,6 +216,44 @@ def main(args):
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=0, last_epoch=-1, verbose=False)
 
         model,optimizer,scheduler,train_loader,test_loader=accelerator.prepare(model,optimizer,scheduler,train_loader,test_loader)
+
+        #PREtesting
+        reconstructed_image_list=[]
+        image_list=[]
+        metrics={}
+        with torch.no_grad():
+            test_loss_list=[]
+            for k,batch in enumerate(test_loader):
+                if k==args.pretest_limit:
+                    break
+                fmri=batch["fmri"].to(device).to(torch_dtype)
+                images=batch["image"].to(device).to(torch_dtype)
+                batch_size=images.size()[0]
+
+                reconstructed_images=model(fmri)
+                loss=F.mse_loss(images,reconstructed_images)
+                test_loss_list.append(loss.cpu().detach().item())
+
+                for img_data,data_list in zip([images,reconstructed_images],
+                                        [image_list,reconstructed_image_list]):
+                    img_np=img_data.cpu().permute(0, 2, 3, 1).float().numpy()
+                    img_np=img_np*255
+                    img_np=img_np.round().astype(np.uint8)
+                    for i in img_np:
+                        data_list.append(Image.fromarray(i))
+
+            for k,(real,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
+                concat=concat_images_horizontally(real,reconstructed)
+                metrics[f"test_result_{k}"]=wandb.Image(concat)
+
+            reconstructed_clip=np.mean(clip_difference(image_list,reconstructed_image_list))
+
+            metrics={
+                "test_loss":np.mean(test_loss_list),
+                "clip_difference":reconstructed_clip
+            }
+            print(metrics)
+            accelerator.log(metrics)
 
         for e in range(1, args.epochs+1):
             start=time.time()
