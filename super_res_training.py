@@ -211,9 +211,10 @@ def main(args):
             for p in model.parameters():
                 p.data = p.data.half()'''
 
-        optimizer=torch.optim.AdamW([p for p in model.parameters()],0.0001)
+        optimizer=torch.optim.AdamW([p for p in model.parameters()],0.1)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=0, last_epoch=-1, verbose=False)
 
-        model,optimizer,train_loader,test_loader=accelerator.prepare(model,optimizer,train_loader,test_loader)
+        model,optimizer,scheduler,train_loader,test_loader=accelerator.prepare(model,optimizer,scheduler,train_loader,test_loader)
 
         for e in range(1, args.epochs+1):
             start=time.time()
@@ -236,6 +237,7 @@ def main(args):
                     train_loss_list.append(loss.cpu().detach().item())
                     accelerator.backward(loss)
                     optimizer.step()
+            scheduler.step()
             metrics={
                 "training_loss":np.mean(train_loss_list)
             }
@@ -304,6 +306,7 @@ def main(args):
 
             for k,(real,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
                 concat=concat_images_horizontally(real,reconstructed)
+                
             reconstructed_clip=np.mean(clip_difference(image_list,reconstructed_image_list))
 
             metrics={
