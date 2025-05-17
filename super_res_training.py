@@ -43,6 +43,8 @@ parser.add_argument("--validation_interval",type= int,default=1)
 parser.add_argument("--residual_blocks",type=int,default=2)
 parser.add_argument("--deepspeed",action="store_true")
 parser.add_argument("--pretest_limit",type=int,default=10)
+parser.add_argument("--save_path",type=str,default="")
+parser.add_argument("--save_interval",type=int,default=50)
 
 def concat_images_horizontally(*imgs: Image.Image) -> Image.Image:
     """
@@ -86,6 +88,9 @@ def main(args):
         "fp16":torch.float16,
         "bf16":torch.bfloat16
     }[args.mixed_precision]
+
+    save_dir=os.path.join(os.environ["BRAIN_DATA_DIR"], "models")
+    os.makedirs(save_dir, exist_ok=True)
     with accelerator.autocast():
 
         print("torch dtype",torch_dtype)
@@ -278,6 +283,9 @@ def main(args):
                     accelerator.backward(loss)
                     optimizer.step()
                 scheduler.step()
+            if e % args.save_interval==0:
+                path=os.path.join(save_dir, f"{args.save_path}_{e}.pth")
+                torch.save(model.state_dict(),path)
             metrics={
                 "training_loss":np.mean(train_loss_list)
             }
@@ -319,6 +327,9 @@ def main(args):
                         #accelerator.log({"val_result":wandb.Image(concat)})
                         metrics[f"val_result_{k}"]=wandb.Image(concat)
             accelerator.log(metrics)
+        
+        path=os.path.join(save_dir, f"{args.save_path}_{e}.pth")
+        torch.save(model.state_dict(),path)
         #testing
         reconstructed_image_list=[]
         image_list=[]
