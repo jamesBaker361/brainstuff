@@ -72,6 +72,7 @@ class FMRIConditionedGPT2(nn.Module):
         self,
         input_ids: Optional[torch.LongTensor] = None,
         fmri_embedding=None,
+        labels=None,
         past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
         attention_mask: Optional[torch.FloatTensor] = None,
         token_type_ids: Optional[torch.LongTensor] = None,
@@ -271,8 +272,17 @@ class FMRIConditionedGPT2(nn.Module):
 
         lm_logits = self.gpt2lm.lm_head(hidden_states)
 
+        loss = None
+        if labels is not None:
+            # Flatten the tokens
+            loss = self.gpt2lm.loss_function(
+                lm_logits,
+                labels,
+                vocab_size=self.config.vocab_size,
+            )
+
         return CausalLMOutputWithCrossAttentions(
-            loss=None,
+            loss=loss,
             logits=lm_logits,
             past_key_values=past_key_values,
             hidden_states=hidden_states,
