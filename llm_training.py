@@ -115,13 +115,6 @@ def main(args):
             subject_captions_test=npz_loaded["captions_test"]
             subject_captions_train=npz_loaded["captions_train"]
 
-            
-
-            n_test=len(subject_fmri_test)
-            n_train=len(subject_fmri_train)
-
-
-            
             print(sub,'subject_fmri_train.max(),subject_fmri_train.min()',subject_fmri_train.max(),subject_fmri_train.min())
             print(sub,'subject_fmri_test.max(),subject_fmri_test.min()',subject_fmri_test.max(),subject_fmri_test.min())
             
