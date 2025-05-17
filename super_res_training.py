@@ -212,8 +212,8 @@ def main(args):
             for p in model.parameters():
                 p.data = p.data.half()'''
 
-        optimizer=torch.optim.AdamW([p for p in model.parameters()],0.1)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=0, last_epoch=-1, verbose=False)
+        optimizer=torch.optim.AdamW([p for p in model.parameters()],0.001)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=len(train_dataset)*args.epochs,verbose=False)
 
         model,optimizer,scheduler,train_loader,test_loader=accelerator.prepare(model,optimizer,scheduler,train_loader,test_loader)
 
@@ -277,7 +277,7 @@ def main(args):
                     train_loss_list.append(loss.cpu().detach().item())
                     accelerator.backward(loss)
                     optimizer.step()
-            scheduler.step()
+                scheduler.step()
             metrics={
                 "training_loss":np.mean(train_loss_list)
             }
