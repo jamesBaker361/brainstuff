@@ -88,13 +88,9 @@ def main(args):
     with accelerator.autocast():
 
         train_fmri=[]
-        train_img=[]
-        train_labels=[]
         train_text=[]
 
         test_fmri=[]
-        test_img=[]
-        test_labels=[]
         test_text=[]
         
         subject_class_labels={
