@@ -19,7 +19,7 @@ class CrossAttentionBlock(nn.Module):
         return self.norm(x + attn_out)
 
 class FMRIConditionedGPT2(nn.Module):
-    def __init__(self, fmri_dim=128, model_name='gpt2', num_cross_layers=4):
+    def __init__(self, fmri_dim=128, model_name='openai-community/gpt2-xl', num_cross_layers=4):
         super().__init__()
         self.gpt2 = GPT2Model.from_pretrained(model_name)
         self.config = self.gpt2.config
