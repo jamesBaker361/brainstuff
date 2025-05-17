@@ -306,7 +306,8 @@ def main(args):
 
             for k,(real,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
                 concat=concat_images_horizontally(real,reconstructed)
-                
+                metrics[f"test_result_{k}"]=wandb.Image(concat)
+
             reconstructed_clip=np.mean(clip_difference(image_list,reconstructed_image_list))
 
             metrics={
