@@ -17,6 +17,26 @@ import torchvision
 from metric_helpers import pixelwise_corr_from_pil,clip_difference
 from sklearn.decomposition import PCA
 import joblib
+from pathlib import Path
+import re
+
+def get_max_file(save_dir,name):
+    directory = Path(save_dir)
+
+    # Regular expression to match files like name_123.pth
+    pattern = re.compile(rf"^{re.escape(name)}_(\d+)\.pth$")
+
+    max_e = -1
+    max_file = None
+
+    for file in directory.glob(f"{name}_*.pth"):
+        match = pattern.match(file.name)
+        if match:
+            e = int(match.group(1))
+            if e > max_e:
+                max_e = e
+                max_file = file
+    return max_file,e
 
 
 for i in range(torch.cuda.device_count()):
@@ -45,6 +65,7 @@ parser.add_argument("--deepspeed",action="store_true")
 parser.add_argument("--pretest_limit",type=int,default=10)
 parser.add_argument("--save_path",type=str,default="")
 parser.add_argument("--save_interval",type=int,default=50)
+parser.add_argument("--load",action="store_true")
 
 def concat_images_horizontally(*imgs: Image.Image) -> Image.Image:
     """
@@ -210,6 +231,12 @@ def main(args):
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
         model=SuperResolutionModel((256,4,4),(3,512,512),args.residual_blocks)
+        start_epoch=1
+
+        max_file,max_e=get_max_file(save_dir,args.save_path)
+        if max_file is not None and args.load:
+            model.load_state_dict(torch.load(max_file,weights_only=True))
+            start_epoch=max_e
         model=model.to(device).to(torch_dtype)
 
         # If using torch_dtype=torch.float16, also convert manually:
@@ -223,12 +250,17 @@ def main(args):
         except TypeError:
             scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=len(train_dataset)*args.epochs)
 
+        
+        
         model,optimizer,scheduler,train_loader,test_loader=accelerator.prepare(model,optimizer,scheduler,train_loader,test_loader)
 
         #PREtesting
         reconstructed_image_list=[]
         image_list=[]
         metrics={}
+
+
+
         with torch.no_grad():
             test_loss_list=[]
             for k,batch in enumerate(test_loader):
@@ -264,7 +296,7 @@ def main(args):
                 metrics[f"test_result_{k}"]=wandb.Image(concat)
             accelerator.log(metrics)
 
-        for e in range(1, args.epochs+1):
+        for e in range(start_epoch, args.epochs+1):
             start=time.time()
             validation_set=[]
             train_loss_list=[]
