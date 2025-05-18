@@ -7,5 +7,6 @@ d={
     "image":[Image.open("Cat_November_2010-1a.jpg")]
 
 }
-token=os.environ["HF_TOKEN"]
+with open("token.txt","r") as file:
+    token=file.readline().strip()
 Dataset.from_dict(d).push_to_hub("jlbaker361/testing",token=token)
