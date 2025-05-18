@@ -235,6 +235,7 @@ def main(args):
 
         max_file,max_e=get_max_file(save_dir,args.save_path)
         if max_file is not None and args.load:
+            print("loading from ",max_file)
             model.load_state_dict(torch.load(max_file,weights_only=True))
             start_epoch=max_e
         model=model.to(device).to(torch_dtype)
