@@ -64,7 +64,7 @@ parser.add_argument("--validation_interval",type= int,default=1)
 parser.add_argument("--residual_blocks",type=int,default=2)
 parser.add_argument("--deepspeed",action="store_true")
 parser.add_argument("--pretest_limit",type=int,default=10)
-parser.add_argument("--save_path",type=str,default="")
+parser.add_argument("--name",type=str,default="")
 parser.add_argument("--save_interval",type=int,default=50)
 parser.add_argument("--load",action="store_true")
 
@@ -234,7 +234,7 @@ def main(args):
         model=SuperResolutionModel((256,4,4),(3,512,512),args.residual_blocks)
         start_epoch=1
 
-        max_file,max_e=get_max_file(save_dir,args.save_path)
+        max_file,max_e=get_max_file(save_dir,args.name)
         if max_file is not None and args.load:
             print("loading from ",max_file)
             model.load_state_dict(torch.load(max_file,weights_only=True))
@@ -327,7 +327,7 @@ def main(args):
                     optimizer.step()
                 scheduler.step()
             if e % args.save_interval==0:
-                path=os.path.join(save_dir, f"{args.save_path}_{e}.pth")
+                path=os.path.join(save_dir, f"{args.name}_{e}.pth")
                 torch.save(model.state_dict(),path)
             metrics={
                 "training_loss":np.mean(train_loss_list)
@@ -371,7 +371,7 @@ def main(args):
                         metrics[f"val_result_{k}"]=wandb.Image(concat)
             accelerator.log(metrics)
         
-        path=os.path.join(save_dir, f"{args.save_path}_{e}.pth")
+        path=os.path.join(save_dir, f"{args.name}_{e}.pth")
         torch.save(model.state_dict(),path)
         #testing
         reconstructed_image_list=[]
