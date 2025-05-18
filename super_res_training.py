@@ -36,7 +36,7 @@ def get_max_file(save_dir,name):
             if e > max_e:
                 max_e = e
                 max_file = file
-    return max_file,e
+    return max_file,max_e
 
 
 for i in range(torch.cuda.device_count()):
