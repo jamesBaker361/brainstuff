@@ -19,6 +19,7 @@ from sklearn.decomposition import PCA
 import joblib
 from pathlib import Path
 import re
+from datasets import Dataset
 
 def get_max_file(save_dir,name):
     directory = Path(save_dir)
@@ -260,7 +261,11 @@ def main(args):
         image_list=[]
         metrics={}
 
-
+        hf_dataset_dict={
+            "src":[],
+            "before":[],
+            "after":[]
+        }
 
         with torch.no_grad():
             test_loss_list=[]
@@ -293,8 +298,10 @@ def main(args):
             }
             print(metrics)
             for k,(real,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
-                concat=concat_images_horizontally(real,reconstructed)
-                metrics[f"test_result_{k}"]=wandb.Image(concat)
+                #concat=concat_images_horizontally(real,reconstructed)
+                hf_dataset_dict["src"].append(real)
+                hf_dataset_dict["before"].append(reconstructed)
+                #metrics[f"test_result_{k}"]=wandb.Image(concat)
             accelerator.log(metrics)
 
         for e in range(start_epoch, args.epochs+1):
@@ -399,9 +406,16 @@ def main(args):
             }
             print(metrics)
             for k,(real,reconstructed) in enumerate(zip(image_list,reconstructed_image_list)):
-                concat=concat_images_horizontally(real,reconstructed)
-                metrics[f"test_result_{k}"]=wandb.Image(concat)
+                #concat=concat_images_horizontally(real,reconstructed)
+                #metrics[f"test_result_{k}"]=wandb.Image(concat)
+                hf_dataset_dict["after"].append(reconstructed)
             accelerator.log(metrics)
+            try:
+                Dataset.from_dict(hf_dataset_dict).push_to_hub(f"jlbaker361/{args.name}")
+            except:
+                with open("token.txt","r") as file:
+                    token=file.readline().strip()
+                    Dataset.from_dict(hf_dataset_dict).push_to_hub(f"jlbaker361/{args.name}",token=token)
                 
 
 
