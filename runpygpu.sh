@@ -12,7 +12,7 @@
 
 #SBATCH --gres=gpu:1
 
-#SBATCH --mem=64000                # Real memory (RAM) required (MB)
+#SBATCH --mem=128000                # Real memory (RAM) required (MB)
 
 #SBATCH --time=3-00:00:00           # Total run time limit (D-HH:MM:SS)
 
@@ -20,14 +20,21 @@
 
 #SBATCH --error=slurm/generic/%j.err   # STDERR output file (optional)
 
+#SBATCH --exclude=gpu[005,006,011,018],cuda[001-008],pascal[006-010],gpuk[001-012]
+
+
+
 day=$(date +'%m/%d/%Y %R')
 echo "gpu"  ${day} $SLURM_JOBID "node_list" $SLURM_NODELIST $@  "\n" >> jobs.txt
 module purge
+export MODULEPATH=$MODULEPATH:/projects/community/modulefiles
 module load intel/17.0.4
 #module load cudnn/7.0.3
-module load cuda/11.3
+module load gcc/10.3.0-pgarias
+module load cuda/12.1.0
+gcc --version
 eval "$(conda shell.bash hook)"
-conda activate hands0
+conda activate deephands
 export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:64
 export TORCH_USE_CUDA_DSA="1"
 export CUDA_LAUNCH_BLOCKING="1"
@@ -45,5 +52,13 @@ export BRAIN_DATA_DIR='/scratch/jlb638/brain-diffuser/data'
 export CUDA_LAUNCH_BLOCKING="1"
 export SCIKIT_LEARN_DATA="/scratch/jlb638/scikit-learn-data"
 export BRAIN_DATA_DIR="/scratch/jlb638/brain/data"
-srun python3 -u $@
+echo "Running on: $(hostname)"
+echo "Allocated GPUs:"
+nvidia-smi
+echo "version"
+nvcc --version
+srun accelerate launch  $@
 conda deactivate
+echo "Running on: $(hostname)"
+echo "Allocated GPUs:"
+nvidia-smi
