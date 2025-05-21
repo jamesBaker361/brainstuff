@@ -169,7 +169,11 @@ def main(args):
             test_img.extend(subject_stim_test)
             test_labels.extend(subject_test_labels)
 
+        n_val_indices=int(args.val_split*len(train_fmri))
+        val_indices=set(np.random.choice(np.arange(0, len(train_fmri)), size=n_val_indices, replace=False))
+        print("n_val_indices",n_val_indices)
         train_img=[np.transpose(i, (2,0,1)) for i in train_img]
+
         test_img=[np.transpose(i, (2,0,1)) for i in test_img]
 
         pca = joblib.load(os.path.join(os.environ["BRAIN_DATA_DIR"],"pca",f"subj{sub:02d}_4096_fmri.pkl"))
@@ -312,7 +316,7 @@ def main(args):
                 if k==args.train_limit:
                     break
                 with accelerator.accumulate(model):
-                    if e %args.validation_interval==0 and random.random() < args.val_split:
+                    if k in val_indices:
                         validation_set.append(batch)
                         continue
                     fmri=batch["fmri"].to(device).to(torch_dtype)
@@ -335,7 +339,7 @@ def main(args):
             end=time.time()
             print(f"epoch {e} elapsed {end-start}")
             #validation
-            if len(validation_set)!=0:
+            if e%args.validation_interval==0:
                 val_loss_list=[]
                 with torch.no_grad():
                     for batch in validation_set:
