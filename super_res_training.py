@@ -270,7 +270,7 @@ def main(args):
         with torch.no_grad():
             test_loss_list=[]
             for k,batch in enumerate(test_loader):
-                if k==args.pretest_limit:
+                if k==args.test_limit:
                     break
                 fmri=batch["fmri"].to(device).to(torch_dtype)
                 images=batch["image"].to(device).to(torch_dtype)
