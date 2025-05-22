@@ -236,13 +236,7 @@ def main(args):
         test_loader=DataLoader(test_dataset,batch_size=args.batch_size,)
 
         model=SuperResolutionModel((256,4,4),(3,512,512),args.residual_blocks)
-        start_epoch=1
-
-        max_file,max_e=get_max_file(save_dir,args.name)
-        if max_file is not None and args.load:
-            print("loading from ",max_file)
-            model.load_state_dict(torch.load(max_file,weights_only=True))
-            start_epoch=max_e
+        
         model=model.to(device).to(torch_dtype)
 
         # If using torch_dtype=torch.float16, also convert manually:
@@ -307,6 +301,16 @@ def main(args):
                 hf_dataset_dict["before"].append(reconstructed)
                 #metrics[f"test_result_{k}"]=wandb.Image(concat)
             accelerator.log(metrics)
+
+        start_epoch=1
+
+        max_file,max_e=get_max_file(save_dir,args.name)
+        if max_file is not None and args.load:
+            print("loading from ",max_file)
+            model.load_state_dict(torch.load(max_file,weights_only=True))
+            start_epoch=max_e
+
+        model=accelerator.prepare(model)
 
         for e in range(start_epoch, args.epochs+1):
             start=time.time()
